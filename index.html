@@ -6,98 +6,123 @@
     <title>Calendar Generator</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body data-theme="dark">
     <div class="panel-scroll-wrapper">
         <div class="panel-container">
             <header class="panel-header">
-                <h1 class="panel-title">Calendar Generator Pro</h1>
-                <span class="panel-subtitle">12 Ամիս &amp; Shimmer</span>
+                <div class="header-left">
+                    <h1 class="panel-title">Calendar Generator Pro</h1>
+                    <span id="panelSubtitle" class="panel-subtitle" data-i18n="subtitle">12 Ամիս եւ Shimmer</span>
+                </div>
+                <div class="header-right">
+                    <div role="button" tabindex="0" id="checkUpdateBtn" class="btn-update-check" title="Ստուգել թարմացումները GitHub-ում">
+                        <span id="pluginVersionLabel">v1.0.0</span> ↻
+                    </div>
+                    <div class="lang-switch-group" role="group" aria-label="UI Language">
+                        <div role="button" tabindex="0" id="uiLangHyBtn" class="lang-btn active" data-ui-lang="hy">ՀԱՅ</div>
+                        <div role="button" tabindex="0" id="uiLangEnBtn" class="lang-btn" data-ui-lang="en">ENG</div>
+                    </div>
+                </div>
             </header>
+
+            <!-- GitHub Releases Update Notification Card -->
+            <div id="updateBanner" class="update-banner hidden">
+                <div class="update-banner-top">
+                    <span id="updateBannerTitle" class="update-banner-title">Հասանելի է նոր թարմացում</span>
+                    <div role="button" tabindex="0" id="dismissUpdateBtn" class="update-dismiss-btn" title="Փակել">×</div>
+                </div>
+                <div id="updateBannerNotes" class="update-banner-notes"></div>
+                <div id="updateActionRow" class="update-action-row">
+                    <div role="button" tabindex="0" id="installUpdateBtn" class="btn-update-install" data-i18n="updateNowBtn">Թարմացնել հիմա</div>
+                    <div role="button" tabindex="0" id="openReleaseUrlBtn" class="btn-update-link" data-i18n="openGithubBtn">Բացել GitHub-ում</div>
+                </div>
+            </div>
 
             <!-- Loading Progress Bar -->
             <div id="loadingContainer" class="loading-container hidden">
                 <div class="loading-header">
-                    <span id="loadingText">Թարմացվում է InDesign-ում...</span>
+                    <span id="loadingText" data-i18n="loadingUpdating">Թարմացվում է InDesign-ում...</span>
                     <span id="loadingPercent">0%</span>
                 </div>
                 <div class="loading-bar-bg">
-                    <div id="loadingBarFill" class="loading-bar-fill"></div>
+                    <div id="loadingBarFill" class="loading-bar-fill shimmer-active"></div>
                 </div>
             </div>
 
             <!-- Live Preview Toggle Button & Scope -->
             <div class="section-card live-card">
-                <button type="button" id="toggleLivePreviewBtn" class="btn-live-toggle active">
-                    Live Preview՝ ՄԻԱՑՎԱԾ Է (Սեղմեք անջատելու համար)
-                </button>
+                <div role="button" tabindex="0" id="startPreviewBtn" class="btn-start-preview" data-i18n="startPreviewBtn">▶ Սկսել</div>
+                <div role="button" tabindex="0" id="toggleLivePreviewBtn" class="btn-live-toggle active">
+                    Live Preview՝ ՄԻԱՑՎԱԾ Է (Անջատել)
+                </div>
                 <input type="checkbox" id="inDesignLivePreview" checked style="display: none;">
 
                 <div class="form-row" style="margin-top: 6px;">
                     <div class="form-group">
-                        <label for="previewModeSelect">Նախադիտման և գեներացման ծավալ</label>
+                        <label for="previewModeSelect" data-i18n="previewScopeLabel">Նախադիտման եւ գեներացման ծավալ</label>
                         <select id="previewModeSelect" class="form-control">
-                            <option value="all" selected>Բոլոր 12 ամիսները (12 էջ)</option>
-                            <option value="single">Միայն ընտրված ամիսը (1 էջ)</option>
+                            <option value="all" data-i18n="scopeAll12" selected>Բոլոր 12 ամիսները (12 էջ)</option>
+                            <option value="single" data-i18n="scopeSingle1">Միայն ընտրված ամիսը (1 էջ)</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="checkbox-row" data-check="enableSkeletonCheckbox">
                     <input type="checkbox" id="enableSkeletonCheckbox" checked>
-                    <div class="checkbox-text" style="color: #ffffff;">Սկելետոն շիմեր անիմացիա InDesign-ի էջերում</div>
+                    <div class="checkbox-text" data-i18n="skeletonToggleLabel">Սկելետոն շիմեր անիմացիա InDesign-ի էջերում</div>
                 </div>
             </div>
 
             <!-- 1. General Settings, Languages, Headers, Captions & Holidays -->
             <div class="section-card">
-                <div class="section-title">1. Հիմնական, Լեզուներ, Վերնագրեր և Տոներ</div>
+                <div class="section-title" data-i18n="sec1Title">1. Հիմնական, Լեզուներ, Վերնագրեր եւ Տոներ</div>
                 <div class="form-row">
                     <div class="form-group half">
-                        <label for="yearInput">Տարի</label>
-                        <input type="number" id="yearInput" class="form-control" value="2026" min="1900" max="2100">
+                        <label for="yearInput" class="scrub-label" data-i18n="yearLabel">Տարի</label>
+                        <input type="number" id="yearInput" class="form-control" value="2026" min="1900" max="2100" step="1">
                     </div>
                     <div class="form-group half">
-                        <label for="monthSelect">Ամիս (1 ամսվա համար)</label>
+                        <label for="monthSelect" data-i18n="monthLabel">Ամիս (1 ամսվա համար)</label>
                         <select id="monthSelect" class="form-control">
-                            <option value="0" selected>Հունվար</option>
-                            <option value="1">Փետրվար</option>
-                            <option value="2">Մարտ</option>
-                            <option value="3">Ապրիլ</option>
-                            <option value="4">Մայիս</option>
-                            <option value="5">Հունիս</option>
-                            <option value="6">Հուլիս</option>
-                            <option value="7">Օգոստոս</option>
-                            <option value="8">Սեպտեմբեր</option>
-                            <option value="9">Հոկտեմբեր</option>
-                            <option value="10">Նոյեմբեր</option>
-                            <option value="11">Դեկտեմբեր</option>
+                            <option value="0" data-i18n="month0" selected>Հունվար</option>
+                            <option value="1" data-i18n="month1">Փետրվար</option>
+                            <option value="2" data-i18n="month2">Մարտ</option>
+                            <option value="3" data-i18n="month3">Ապրիլ</option>
+                            <option value="4" data-i18n="month4">Մայիս</option>
+                            <option value="5" data-i18n="month5">Հունիս</option>
+                            <option value="6" data-i18n="month6">Հուլիս</option>
+                            <option value="7" data-i18n="month7">Օգոստոս</option>
+                            <option value="8" data-i18n="month8">Սեպտեմբեր</option>
+                            <option value="9" data-i18n="month9">Հոկտեմբեր</option>
+                            <option value="10" data-i18n="month10">Նոյեմբեր</option>
+                            <option value="11" data-i18n="month11">Դեկտեմբեր</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group half">
-                        <label for="langSelect">Լեզու (12 լեզու)</label>
+                        <label for="langSelect" data-i18n="calLangLabel">Լեզու (12 լեզու)</label>
                         <select id="langSelect" class="form-control">
-                            <option value="hy" selected>Հայերեն (Արևելահայերեն)</option>
-                            <option value="hy_w">Հայերեն (Արևմտահայերեն)</option>
-                            <option value="en">Անգլերեն (English)</option>
-                            <option value="ru">Ռուսերեն (Русский)</option>
-                            <option value="fr">Ֆրանսերեն (Français)</option>
-                            <option value="de">Գերմաներեն (Deutsch)</option>
-                            <option value="es">Իսպաներեն (Español)</option>
-                            <option value="it">Իտալերեն (Italiano)</option>
-                            <option value="pt">Պորտուգալերեն (Português)</option>
-                            <option value="ka">Վրացերեն (ქართული)</option>
-                            <option value="el">Հունարեն (Ελληνικά)</option>
-                            <option value="pl">Լեհերեն (Polski)</option>
+                            <option value="hy" data-i18n="lang_hy" selected>Հայերեն (Արեւելահայերեն)</option>
+                            <option value="hy_w" data-i18n="lang_hy_w">Հայերեն (Արեւմտահայերեն)</option>
+                            <option value="en" data-i18n="lang_en">Անգլերեն (English)</option>
+                            <option value="ru" data-i18n="lang_ru">Ռուսերեն (Русский)</option>
+                            <option value="fr" data-i18n="lang_fr">Ֆրանսերեն (Français)</option>
+                            <option value="de" data-i18n="lang_de">Գերմաներեն (Deutsch)</option>
+                            <option value="es" data-i18n="lang_es">Իսպաներեն (Español)</option>
+                            <option value="it" data-i18n="lang_it">Իտալերեն (Italiano)</option>
+                            <option value="pt" data-i18n="lang_pt">Պորտուգալերեն (Português)</option>
+                            <option value="ka" data-i18n="lang_ka">Վրացերեն (ქართული)</option>
+                            <option value="el" data-i18n="lang_el">Հունարեն (Ελληνικά)</option>
+                            <option value="pl" data-i18n="lang_pl">Լեհերեն (Polski)</option>
                         </select>
                     </div>
                     <div class="form-group half">
-                        <label for="startDaySelect">Շաբաթվա սկիզբ</label>
+                        <label for="startDaySelect" data-i18n="startDayLabel">Շաբաթվա սկիզբ</label>
                         <select id="startDaySelect" class="form-control">
-                            <option value="mon" selected>Երկուշաբթի</option>
-                            <option value="sun">Կիրակի</option>
+                            <option value="mon" data-i18n="startMon" selected>Երկուշաբթի</option>
+                            <option value="sun" data-i18n="startSun">Կիրակի</option>
                         </select>
                     </div>
                 </div>
@@ -105,140 +130,142 @@
                 <!-- Header & Padding Toggles -->
                 <div class="checkbox-row" data-check="showTitleCheckbox">
                     <input type="checkbox" id="showTitleCheckbox" checked>
-                    <div class="checkbox-text" style="color: #ffffff;">Ցուցադրել ամսվա և տարվա վերնագիրը</div>
+                    <div class="checkbox-text" data-i18n="showTitleLabel">Ցուցադրել ամսվա եւ տարվա վերնագիրը</div>
                 </div>
 
                 <div class="checkbox-row" data-check="showWeekdaysCheckbox">
                     <input type="checkbox" id="showWeekdaysCheckbox" checked>
-                    <div class="checkbox-text" style="color: #ffffff;">Ցուցադրել շաբաթվա օրերի վերնագրի տողը</div>
+                    <div class="checkbox-text" data-i18n="showWeekdaysLabel">Ցուցադրել շաբաթվա օրերի վերնագրի տողը</div>
                 </div>
 
                 <div class="checkbox-row" data-check="paddingCheckbox">
                     <input type="checkbox" id="paddingCheckbox" checked>
-                    <div class="checkbox-text" style="color: #ffffff;">Ցուցադրել նախորդ/հաջորդ ամիսների թվերը</div>
+                    <div class="checkbox-text" data-i18n="showPaddingLabel">Ցուցադրել նախորդ/հաջորդ ամիսների թվերը</div>
                 </div>
 
                 <!-- Holidays & Captions Toggles -->
-                <div class="checkbox-row" data-check="enableHolidaysCheckbox" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #3d3d3d;">
+                <div class="checkbox-row section-divider" data-check="enableHolidaysCheckbox">
                     <input type="checkbox" id="enableHolidaysCheckbox" checked>
-                    <div class="checkbox-text" style="color: #ffffff;">Միացնել տոները (Անշարժ և շարժական)</div>
+                    <div class="checkbox-text" data-i18n="enableHolidaysLabel">Միացնել տոները (Անշարժ եւ շարժական)</div>
                 </div>
 
                 <div class="form-group" style="margin-top: 5px;">
-                    <label for="countrySelect">Երկիր (Տոների բազա)</label>
+                    <label for="countrySelect" data-i18n="countryLabel">Երկիր (Տոների բազա)</label>
                     <select id="countrySelect" class="form-control">
-                        <option value="AM" selected>Հայաստան (Պետական + Եկեղեցական շարժական)</option>
-                        <option value="RU">Ռուսաստան (Պետական + Ուղղափառ շարժական)</option>
-                        <option value="US">ԱՄՆ (Դաշնային + Շարժական տոներ)</option>
-                        <option value="FR">Ֆրանսիա (Ազգային + Շարժական տոներ)</option>
-                        <option value="DE">Գերմանիա (Ազգային + Շարժական տոներ)</option>
-                        <option value="GE">Վրաստան (Պետական + Ուղղափառ շարժական)</option>
-                        <option value="EU">Եվրոպա / Միջազգային</option>
+                        <option value="AM" data-i18n="country_AM" selected>Հայաստան (Պետական + Եկեղեցական շարժական)</option>
+                        <option value="RU" data-i18n="country_RU">Ռուսաստան (Պետական + Ուղղափառ շարժական)</option>
+                        <option value="US" data-i18n="country_US">ԱՄՆ (Դաշնային + Շարժական տոներ)</option>
+                        <option value="FR" data-i18n="country_FR">Ֆրանսիա (Ազգային + Շարժական տոներ)</option>
+                        <option value="DE" data-i18n="country_DE">Գերմանիա (Ազգային + Շարժական տոներ)</option>
+                        <option value="GE" data-i18n="country_GE">Վրաստան (Պետական + Ուղղափառ շարժական)</option>
+                        <option value="EU" data-i18n="country_EU">Եվրոպա / Միջազգային</option>
                     </select>
                 </div>
 
                 <div class="checkbox-row" data-check="showInCellHolidayCheckbox">
                     <input type="checkbox" id="showInCellHolidayCheckbox" checked>
-                    <div class="checkbox-text" style="color: #ffffff;">Ցուցադրել տոների տեքստը վանդակների մեջ</div>
+                    <div class="checkbox-text" data-i18n="showInCellHolidayLabel">Ցուցադրել տոների տեքստը վանդակների մեջ</div>
                 </div>
 
                 <div class="checkbox-row" data-check="showFooterCaptionCheckbox">
                     <input type="checkbox" id="showFooterCaptionCheckbox" checked>
-                    <div class="checkbox-text" style="color: #ffffff;">Ցուցադրել տակագրերը (Ամսվա տոների ստորին տող)</div>
+                    <div class="checkbox-text" data-i18n="showFooterCaptionLabel">Ցուցադրել տակագրերը (Ամսվա տոների ստորին տող)</div>
                 </div>
             </div>
 
-            <!-- 2. Table Dimensions, Units, Cell Padding, Margin & Alignment -->
+            <!-- 2. Table Dimensions, Units, Cell Padding, Margin & 9-Point Alignment -->
             <div class="section-card">
-                <div class="section-title">2. Չափեր, Միավոր, Padding, Margin և Դիրք</div>
+                <div class="section-title" data-i18n="sec2Title">2. Չափեր, Միավոր, Padding, Margin եւ Դիրք</div>
 
                 <div class="form-row">
                     <div class="form-group half">
-                        <label for="unitSelect">Չափման միավոր</label>
+                        <label for="unitSelect" data-i18n="unitLabel">Չափման միավոր</label>
                         <select id="unitSelect" class="form-control">
-                            <option value="mm" selected>Միլիմետր (mm)</option>
-                            <option value="cm">Սանտիմետր (cm)</option>
-                            <option value="pt">Պունկտ (pt)</option>
-                            <option value="in">Դյույմ (in)</option>
-                            <option value="px">Պիքսել (px)</option>
+                            <option value="mm" data-i18n="unit_mm" selected>Միլիմետր (mm)</option>
+                            <option value="cm" data-i18n="unit_cm">Սանտիմետր (cm)</option>
+                            <option value="pt" data-i18n="unit_pt">Պունկտ (pt)</option>
+                            <option value="in" data-i18n="unit_in">Դյույմ (in)</option>
+                            <option value="px" data-i18n="unit_px">Պիքսել (px)</option>
                         </select>
                     </div>
                     <div class="form-group half" style="justify-content: flex-end;">
                         <label>&nbsp;</label>
-                        <button type="button" id="syncDocSettingsBtn" class="btn-mini">Վերցնել էջից (Auto)</button>
+                        <div role="button" tabindex="0" id="syncDocSettingsBtn" class="btn-mini" data-i18n="syncPageBtn">Վերցնել էջից (Auto)</div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group half">
-                        <label for="tableWidthInput">Լայնություն (<span class="unit-label">mm</span>)</label>
-                        <input type="number" id="tableWidthInput" class="form-control" value="174" step="1" min="10">
+                        <label for="tableWidthInput" class="scrub-label"><span data-i18n="widthLabel">Լայնություն</span> (<span class="unit-label">mm</span>)</label>
+                        <input type="number" id="tableWidthInput" class="form-control" value="184.6" step="1" min="10">
                     </div>
                     <div class="form-group half">
-                        <label for="tableHeightInput">Բարձրություն (<span class="unit-label">mm</span>)</label>
-                        <input type="number" id="tableHeightInput" class="form-control" value="250" step="1" min="10">
+                        <label for="tableHeightInput" class="scrub-label"><span data-i18n="heightLabel">Բարձրություն</span> (<span class="unit-label">mm</span>)</label>
+                        <input type="number" id="tableHeightInput" class="form-control" value="271.6" step="1" min="10">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group half">
-                        <label for="tableLeftInput">Margin Ձախ X (<span class="unit-label">mm</span>)</label>
-                        <input type="number" id="tableLeftInput" class="form-control" value="18" step="1" min="0">
+                        <label for="tableLeftInput" class="scrub-label"><span data-i18n="leftMarginLabel">Margin Ձախ X</span> (<span class="unit-label">mm</span>)</label>
+                        <input type="number" id="tableLeftInput" class="form-control" value="12.7" step="0.5" min="0">
                     </div>
                     <div class="form-group half">
-                        <label for="tableTopInput">Margin Վերև Y (<span class="unit-label">mm</span>)</label>
-                        <input type="number" id="tableTopInput" class="form-control" value="18" step="1" min="0">
+                        <label for="tableTopInput" class="scrub-label"><span data-i18n="topMarginLabel">Margin Վերեւ Y</span> (<span class="unit-label">mm</span>)</label>
+                        <input type="number" id="tableTopInput" class="form-control" value="12.7" step="0.5" min="0">
                     </div>
                 </div>
 
                 <!-- Cell Padding & Cell Margin (Spacing/Border) -->
-                <div class="form-row" style="margin-top: 2px; padding-top: 5px; border-top: 1px solid #3d3d3d;">
+                <div class="form-row section-divider">
                     <div class="form-group half">
-                        <label for="cellPadXInput">Բջիջ Padding X (<span class="unit-label">mm</span>)</label>
+                        <label for="cellPadXInput" class="scrub-label"><span data-i18n="cellPadXLabel">Բջիջ Padding X</span> (<span class="unit-label">mm</span>)</label>
                         <input type="number" id="cellPadXInput" class="form-control" value="1.5" step="0.5" min="0">
                     </div>
                     <div class="form-group half">
-                        <label for="cellPadYInput">Բջիջ Padding Y (<span class="unit-label">mm</span>)</label>
+                        <label for="cellPadYInput" class="scrub-label"><span data-i18n="cellPadYLabel">Բջիջ Padding Y</span> (<span class="unit-label">mm</span>)</label>
                         <input type="number" id="cellPadYInput" class="form-control" value="1.5" step="0.5" min="0">
                     </div>
                 </div>
 
-                <div class="form-row">
+                <div class="form-row align-control-row">
                     <div class="form-group half">
-                        <label for="cellMarginInput">Բջիջների Margin / Եզր (pt)</label>
+                        <label for="cellMarginInput" class="scrub-label" data-i18n="cellMarginLabel">Բջիջների Margin / Եզր (pt)</label>
                         <input type="number" id="cellMarginInput" class="form-control" value="0.75" step="0.25" min="0" max="20">
                     </div>
                     <div class="form-group half">
-                        <label for="cellAlignHSelect">Հորիզոնական դիրք</label>
-                        <select id="cellAlignHSelect" class="form-control">
-                            <option value="LEFT">Ձախից (Left)</option>
-                            <option value="CENTER" selected>Կենտրոն (Center)</option>
-                            <option value="RIGHT">Աջից (Right)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="cellAlignVSelect">Բջիջի բովանդակության ուղղահայաց դիրք</label>
-                        <select id="cellAlignVSelect" class="form-control">
-                            <option value="TOP">Վերևում (Top)</option>
-                            <option value="CENTER" selected>Կենտրոնում (Middle)</option>
-                            <option value="BOTTOM">Ներքևում (Bottom)</option>
-                        </select>
+                        <label data-i18n="cellPosLabel">Բջիջի դիրք (9-կետ)</label>
+                        <div class="ref-point-container">
+                            <div class="ref-point-grip" aria-hidden="true"></div>
+                            <div id="cellAlignGrid" class="ref-point-grid" data-align-h="CENTER" data-align-v="CENTER" role="radiogroup" aria-label="Cell Content Alignment">
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="TOP" data-align-h="LEFT" title="Վերեւ-Ձախ / Top-Left"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="TOP" data-align-h="CENTER" title="Վերեւ-Կենտրոն / Top-Center"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="TOP" data-align-h="RIGHT" title="Վերեւ-Աջ / Top-Right"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="CENTER" data-align-h="LEFT" title="Կենտրոն-Ձախ / Middle-Left"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell active" data-align-v="CENTER" data-align-h="CENTER" title="Կենտրոն / Center"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="CENTER" data-align-h="RIGHT" title="Կենտրոն-Աջ / Middle-Right"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="BOTTOM" data-align-h="LEFT" title="Ներքեւ-Ձախ / Bottom-Left"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="BOTTOM" data-align-h="CENTER" title="Ներքեւ-Կենտրոն / Bottom-Center"></div>
+                                <div role="button" tabindex="0" class="ref-point-cell" data-align-v="BOTTOM" data-align-h="RIGHT" title="Ներքեւ-Աջ / Bottom-Right"></div>
+                            </div>
+                            <div class="ref-point-coords">
+                                <div class="coord-line"><span class="coord-axis">X:</span> <span id="alignXReadout" class="coord-val">Կենտ.</span></div>
+                                <div class="coord-line"><span class="coord-axis">Y:</span> <span id="alignYReadout" class="coord-val">Կենտ.</span></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- 3. Typography Controls -->
             <div class="section-card">
-                <div class="section-title">3. Տառատեսակներ և Տառաչափ (Typography)</div>
+                <div class="section-title" data-i18n="sec3Title">3. Տառատեսակներ եւ Տառաչափ (Typography)</div>
 
                 <div class="form-row">
                     <div class="form-group flex-2">
-                        <label for="titleFont">Վերնագրի տառատեսակ</label>
+                        <label for="titleFont" data-i18n="titleFontLabel">Վերնագրի տառատեսակ</label>
                         <select id="titleFont" class="form-control font-select">
-                            <option value="Calibri" selected>Calibri (Լռելյայն)</option>
+                            <option value="Calibri" data-i18n="defaultCalibri" selected>Calibri (Լռելյայն)</option>
                             <option value="Arial">Arial</option>
                             <option value="Sylfaen">Sylfaen</option>
                             <option value="Noto Sans Armenian">Noto Sans Armenian</option>
@@ -252,16 +279,16 @@
                         </select>
                     </div>
                     <div class="form-group flex-1">
-                        <label for="titleSize">Չափ (pt)</label>
-                        <input type="number" id="titleSize" class="form-control" value="18" min="8" max="72">
+                        <label for="titleSize" class="scrub-label" data-i18n="sizePtLabel">Չափ (pt)</label>
+                        <input type="number" id="titleSize" class="form-control" value="18" min="6" max="120" step="1">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group flex-2">
-                        <label for="headerFont">Շաբաթվա օրերի տառատեսակ</label>
+                        <label for="headerFont" data-i18n="headerFontLabel">Շաբաթվա օրերի տառատեսակ</label>
                         <select id="headerFont" class="form-control font-select">
-                            <option value="Calibri" selected>Calibri (Լռելյայն)</option>
+                            <option value="Calibri" data-i18n="defaultCalibri" selected>Calibri (Լռելյայն)</option>
                             <option value="Arial">Arial</option>
                             <option value="Sylfaen">Sylfaen</option>
                             <option value="Noto Sans Armenian">Noto Sans Armenian</option>
@@ -275,16 +302,16 @@
                         </select>
                     </div>
                     <div class="form-group flex-1">
-                        <label for="headerSize">Չափ (pt)</label>
-                        <input type="number" id="headerSize" class="form-control" value="11" min="6" max="48">
+                        <label for="headerSize" class="scrub-label" data-i18n="sizePtLabel">Չափ (pt)</label>
+                        <input type="number" id="headerSize" class="form-control" value="11" min="6" max="96" step="1">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group flex-2">
-                        <label for="dayFont">Օրերի թվերի տառատեսակ</label>
+                        <label for="dayFont" data-i18n="dayFontLabel">Օրերի թվերի տառատեսակ</label>
                         <select id="dayFont" class="form-control font-select">
-                            <option value="Calibri" selected>Calibri (Լռելյայն)</option>
+                            <option value="Calibri" data-i18n="defaultCalibri" selected>Calibri (Լռելյայն)</option>
                             <option value="Arial">Arial</option>
                             <option value="Sylfaen">Sylfaen</option>
                             <option value="Noto Sans Armenian">Noto Sans Armenian</option>
@@ -298,35 +325,35 @@
                         </select>
                     </div>
                     <div class="form-group flex-1">
-                        <label for="daySize">Չափ (pt)</label>
-                        <input type="number" id="daySize" class="form-control" value="12" min="6" max="48">
+                        <label for="daySize" class="scrub-label" data-i18n="sizePtLabel">Չափ (pt)</label>
+                        <input type="number" id="daySize" class="form-control" value="12" min="6" max="96" step="1">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group half">
-                        <label for="weekendSize">Շաբաթ-Կիրակի (pt)</label>
-                        <input type="number" id="weekendSize" class="form-control" value="12" min="6" max="48">
+                        <label for="weekendSize" class="scrub-label" data-i18n="weekendSizeLabel">Շաբաթ-Կիրակի (pt)</label>
+                        <input type="number" id="weekendSize" class="form-control" value="12" min="6" max="96" step="1">
                     </div>
                     <div class="form-group half">
-                        <label for="paddingSize">Հարևան ամիսներ (pt)</label>
-                        <input type="number" id="paddingSize" class="form-control" value="10" min="6" max="48">
+                        <label for="paddingSize" class="scrub-label" data-i18n="paddingSizeLabel">Հարեւան ամիսներ (pt)</label>
+                        <input type="number" id="paddingSize" class="form-control" value="10" min="6" max="96" step="1">
                     </div>
                 </div>
             </div>
 
             <!-- 4. Colors & Cell Appearance -->
             <div class="section-card">
-                <div class="section-title">4. Գույներ և Վանդակների Տեսք (Colors)</div>
+                <div class="section-title" data-i18n="sec4Title">4. Գույներ եւ Վանդակների Տեսք (Colors)</div>
                 <div class="color-grid-header">
-                    <span>Տարր</span>
-                    <span>Տեքստի գույն</span>
-                    <span>Վանդակի ֆոն</span>
+                    <span data-i18n="colElem">Տարր</span>
+                    <span data-i18n="colTextColor">Տեքստի գույն</span>
+                    <span data-i18n="colBgColor">Վանդակի ֆոն</span>
                 </div>
 
                 <!-- Title Row -->
                 <div class="color-row">
-                    <span class="color-row-label">Ամիս / Տարի (Վերնագիր)</span>
+                    <span class="color-row-label" data-i18n="colorTitleRow">Ամիս / Տարի (Վերնագիր)</span>
                     <div class="color-picker-wrap">
                         <span class="swatch-btn" data-target="titleTextColor"></span>
                         <input type="text" id="titleTextColor" class="color-hex" value="#FFFFFF">
@@ -339,7 +366,7 @@
 
                 <!-- Weekday Row (First row under title) -->
                 <div class="color-row">
-                    <span class="color-row-label">Առաջին տող (Օրեր)</span>
+                    <span class="color-row-label" data-i18n="colorHeaderRow">Առաջին տող (Օրեր)</span>
                     <div class="color-picker-wrap">
                         <span class="swatch-btn" data-target="headerTextColor"></span>
                         <input type="text" id="headerTextColor" class="color-hex" value="#1B365D">
@@ -352,7 +379,7 @@
 
                 <!-- Regular Days -->
                 <div class="color-row">
-                    <span class="color-row-label">Սովորական օրեր</span>
+                    <span class="color-row-label" data-i18n="colorRegularDays">Սովորական օրեր</span>
                     <div class="color-picker-wrap">
                         <span class="swatch-btn" data-target="dayTextColor"></span>
                         <input type="text" id="dayTextColor" class="color-hex" value="#1F1F1F">
@@ -365,7 +392,7 @@
 
                 <!-- Weekend (Sat/Sun) -->
                 <div class="color-row">
-                    <span class="color-row-label">Շաբաթ - Կիրակի</span>
+                    <span class="color-row-label" data-i18n="colorWeekendDays">Շաբաթ - Կիրակի</span>
                     <div class="color-picker-wrap">
                         <span class="swatch-btn" data-target="weekendTextColor"></span>
                         <input type="text" id="weekendTextColor" class="color-hex" value="#C62828">
@@ -378,7 +405,7 @@
 
                 <!-- Prev/Next Month Padding Days -->
                 <div class="color-row">
-                    <span class="color-row-label">Նախորդ/Հաջորդ ամիս</span>
+                    <span class="color-row-label" data-i18n="colorPaddingDays">Նախորդ/Հաջորդ ամիս</span>
                     <div class="color-picker-wrap">
                         <span class="swatch-btn" data-target="paddingTextColor"></span>
                         <input type="text" id="paddingTextColor" class="color-hex" value="#9E9E9E">
@@ -391,7 +418,7 @@
 
                 <!-- Fixed Holidays -->
                 <div class="color-row">
-                    <span class="color-row-label">Պետական տոներ</span>
+                    <span class="color-row-label" data-i18n="colorFixedHolidays">Պետական տոներ</span>
                     <div class="color-picker-wrap">
                         <span class="swatch-btn" data-target="holidayTextColor"></span>
                         <input type="text" id="holidayTextColor" class="color-hex" value="#FFFFFF">
@@ -404,7 +431,7 @@
 
                 <!-- Movable Holidays -->
                 <div class="color-row">
-                    <span class="color-row-label">Շարժական տոներ</span>
+                    <span class="color-row-label" data-i18n="colorMovableHolidays">Շարժական տոներ</span>
                     <div class="color-picker-wrap">
                         <span class="swatch-btn" data-target="movableTextColor"></span>
                         <input type="text" id="movableTextColor" class="color-hex" value="#0D47A1">
@@ -421,7 +448,7 @@
 
             <!-- 5. Panel Mini Preview & Holiday Summary -->
             <div class="preview-section">
-                <div class="preview-label">Նախադիտում և Տոների Ցանկ</div>
+                <div class="preview-label" data-i18n="sec5PreviewTitle">Նախադիտում եւ Տոների Ցանկ</div>
                 <div id="livePreviewText" class="preview-status-text"></div>
                 <div id="livePreviewGrid" class="preview-grid"></div>
                 <div id="holidaySummaryBox" class="holiday-summary-box"></div>
@@ -429,8 +456,8 @@
 
             <!-- 6. Action Buttons -->
             <div class="action-buttons">
-                <button type="button" id="generateAllBtn" class="btn-release btn-all">Գեներացնել 12 ամիսները (12 էջ)</button>
-                <button type="button" id="generateSingleBtn" class="btn-release btn-single">Գեներացնել միայն ընտրված ամիսը</button>
+                <div role="button" tabindex="0" id="generateAllBtn" class="btn-release btn-all" data-i18n="genAllBtn">Գեներացնել 12 ամիսները (12 էջ)</div>
+                <div role="button" tabindex="0" id="generateSingleBtn" class="btn-release btn-single" data-i18n="genSingleBtn">Գեներացնել միայն ընտրված ամիսը</div>
             </div>
             <div id="statusMsg" class="status-msg"></div>
         </div>

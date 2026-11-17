@@ -64,6 +64,49 @@ CSInterface.prototype.evalScript = function(script, callback) {
         window.__adobe_cep__.evalScript(script, callback);
     } else if (typeof window.generateCalendar === "function") {
         try {
+            var trimmed = String(script || "").trim();
+            if (trimmed.indexOf("getDocumentUnitAndSize(") === 0) {
+                var resDoc = (typeof window.getDocumentUnitAndSize === "function")
+                    ? window.getDocumentUnitAndSize()
+                    : '{"hasDoc":false,"unit":"mm","pageW":210,"pageH":297,"w":184.6,"h":271.6,"x":12.7,"y":12.7}';
+                callback(String(resDoc));
+                return;
+            }
+            if (trimmed.indexOf("getHostThemeInfo(") === 0) {
+                var resTheme = (typeof window.getHostThemeInfo === "function")
+                    ? window.getHostThemeInfo()
+                    : '{"hasHost":false,"brightness":0.0,"theme":"dark"}';
+                callback(String(resTheme));
+                return;
+            }
+            if (trimmed.indexOf("getInstalledFontFamilies(") === 0) {
+                var resFonts = (typeof window.getInstalledFontFamilies === "function")
+                    ? window.getInstalledFontFamilies()
+                    : "[]";
+                callback(String(resFonts));
+                return;
+            }
+            if (trimmed.indexOf("renderSkeletonShimmerInDesign(") === 0) {
+                var matchSkel = trimmed.match(/^renderSkeletonShimmerInDesign\s*\(\s*(['"])([\s\S]*?)\1\s*,\s*(\d+)\s*\)$/);
+                if (matchSkel && typeof window.renderSkeletonShimmerInDesign === "function") {
+                    var rawArgSkel = matchSkel[2].replace(/\\'/g, "'").replace(/\\\\/g, "\\");
+                    var stepArg = parseInt(matchSkel[3], 10) || 0;
+                    var resSkel = window.renderSkeletonShimmerInDesign(rawArgSkel, stepArg);
+                    callback(String(resSkel));
+                    return;
+                }
+            }
+            if (trimmed.indexOf("generateCalendar(") === 0) {
+                var matchGen = trimmed.match(/^generateCalendar\s*\(\s*(['"])([\s\S]*?)\1\s*\)$/);
+                if (matchGen && typeof window.generateCalendar === "function") {
+                    var rawArgGen = matchGen[2].replace(/\\'/g, "'").replace(/\\\\/g, "\\");
+                    var resGen = window.generateCalendar(rawArgGen);
+                    callback(String(resGen));
+                    return;
+                }
+            }
+
+            // Safe fallback evaluation
             var fn = new Function("return " + script);
             var res = fn();
             callback(String(res));
