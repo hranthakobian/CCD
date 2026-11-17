@@ -1,0 +1,104 @@
+{
+  "id": "com.calendar.generator",
+  "name": "Calendar Generator",
+  "version": "1.0.0",
+  "main": "index.html",
+  "manifestVersion": 5,
+  "host": {
+    "app": "ID",
+    "minVersion": "18.5.0",
+    "data": {
+      "apiVersion": 2
+    }
+  },
+  "requiredPermissions": {
+    "localFileSystem": "fullAccess",
+    "clipboard": "readAndWrite",
+    "network": {
+      "domains": "all"
+    },
+    "ipc": {
+      "enablePluginCommunication": true
+    }
+  },
+  "icons": [
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/icon.svg",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "all"
+      ],
+      "species": [
+        "pluginList",
+        "generic"
+      ]
+    },
+    {
+      "width": 48,
+      "height": 48,
+      "path": "icons/icon.svg",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "all"
+      ],
+      "species": [
+        "pluginList",
+        "generic"
+      ]
+    }
+  ],
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "calendarGeneratorPanel",
+      "label": {
+        "default": "Calendar Generator"
+      },
+      "icons": [
+        {
+          "width": 23,
+          "height": 23,
+          "path": "icons/icon.svg",
+          "scale": [
+            1,
+            2
+          ],
+          "theme": [
+            "all"
+          ]
+        }
+      ],
+      "minimumSize": {
+        "width": 280,
+        "height": 460
+      },
+      "maximumSize": {
+        "width": 800,
+        "height": 900
+      },
+      "preferredDockedSize": {
+        "width": 300,
+        "height": 540
+      },
+      "preferredFloatingSize": {
+        "width": 320,
+        "height": 560
+      }
+    },
+    {
+      "type": "command",
+      "id": "generateCalendarNow",
+      "label": {
+        "default": "Generate Calendar (2026)"
+      }
+    }
+  ]
+}
