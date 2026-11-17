@@ -76,38 +76,168 @@ function applyUnitToDoc(doc, ctx, unitCode) {
     } catch (e) {}
 }
 
+function ptToUnit(ptVal, unitCode) {
+    var mmVal = ptVal * (25.4 / 72.0);
+    if (unitCode === "cm") {
+        return mmVal / 10.0;
+    }
+    if (unitCode === "in") {
+        return mmVal / 25.4;
+    }
+    if (unitCode === "pt" || unitCode === "px") {
+        return ptVal;
+    }
+    return mmVal;
+}
+
+function getDaysInMonth(year, month) {
+    var m = ((month % 12) + 12) % 12;
+    var y = year + Math.floor(month / 12);
+    if (m === 1) {
+        return ((y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0)) ? 29 : 28;
+    }
+    var days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return days[m];
+}
+
+function getPageMarginBox(doc, page, unitCode) {
+    var pb = page.bounds;
+    var pTop = parseFloat(pb[0]) || 0;
+    var pLeft = parseFloat(pb[1]) || 0;
+    var pBottom = parseFloat(pb[2]) || 0;
+    var pRight = parseFloat(pb[3]) || 0;
+    var pH = Math.abs(pBottom - pTop);
+    var pW = Math.abs(pRight - pLeft);
+    if (isNaN(pW) || pW <= 0) {
+        pW = 210;
+    }
+    if (isNaN(pH) || pH <= 0) {
+        pH = 297;
+    }
+
+    var defaultMargin = ptToUnit(36, unitCode || "mm"); // 12.7mm (0.5 in)
+    var mTop = defaultMargin;
+    var mBottom = defaultMargin;
+    var mLeft = defaultMargin;
+    var mRight = defaultMargin;
+
+    var mp = null;
+    try {
+        mp = page.marginPreferences;
+    } catch (eMp1) {}
+    if (!mp) {
+        try {
+            mp = doc.marginPreferences;
+        } catch (eMp2) {}
+    }
+
+    if (mp) {
+        var rawTop = parseFloat(mp.top);
+        var rawBottom = parseFloat(mp.bottom);
+        var rawLeft = parseFloat(mp.left);
+        var rawRight = parseFloat(mp.right);
+        if (!isNaN(rawTop) && rawTop >= 0) {
+            mTop = rawTop;
+        }
+        if (!isNaN(rawBottom) && rawBottom >= 0) {
+            mBottom = rawBottom;
+        }
+        if (!isNaN(rawLeft) && rawLeft >= 0) {
+            mLeft = rawLeft;
+        }
+        if (!isNaN(rawRight) && rawRight >= 0) {
+            mRight = rawRight;
+        }
+
+        try {
+            var isFacing = doc.documentPreferences && doc.documentPreferences.facingPages;
+            var sideStr = String(page.side || "").toUpperCase();
+            if (isFacing && sideStr.indexOf("LEFT") !== -1) {
+                var tmp = mLeft;
+                mLeft = mRight;
+                mRight = tmp;
+            }
+        } catch (eSide) {}
+    }
+
+    var boxW = pW - mLeft - mRight;
+    var boxH = pH - mTop - mBottom;
+    if (boxW <= 10) {
+        mLeft = Math.round(pW * 0.06 * 100) / 100;
+        mRight = mLeft;
+        boxW = pW - mLeft * 2;
+    }
+    if (boxH <= 10) {
+        mTop = Math.round(pH * 0.06 * 100) / 100;
+        mBottom = mTop;
+        boxH = pH - mTop * 2;
+    }
+
+    return {
+        pageOriginTop: pTop,
+        pageOriginLeft: pLeft,
+        pageW: Math.round(pW * 100) / 100,
+        pageH: Math.round(pH * 100) / 100,
+        x: Math.round(mLeft * 100) / 100,
+        y: Math.round(mTop * 100) / 100,
+        w: Math.round(boxW * 100) / 100,
+        h: Math.round(boxH * 100) / 100
+    };
+}
+
 function getDocumentUnitAndSize() {
     try {
         var ctx = getInDesignContext();
         if (!ctx || !ctx.app || ctx.app.documents.length === 0) {
-            return '{"hasDoc":false,"unit":"mm","pageW":210,"pageH":297,"w":174,"h":250,"x":18,"y":18}';
+            return '{"hasDoc":false,"unit":"mm","pageW":210,"pageH":297,"w":184.6,"h":271.6,"x":12.7,"y":12.7}';
         }
         var doc = ctx.app.activeDocument;
         var unitCode = detectUnitCodeFromDoc(doc);
-        var page = doc.pages.item(0);
-        var pb = page.bounds;
-        var pH = Math.abs(parseFloat(pb[2]) - parseFloat(pb[0]));
-        var pW = Math.abs(parseFloat(pb[3]) - parseFloat(pb[1]));
-        if (isNaN(pW) || pW <= 0) {
-            pW = 210;
-        }
-        if (isNaN(pH) || pH <= 0) {
-            pH = 297;
-        }
-        var marginX = Math.round(pW * 0.085 * 10) / 10;
-        var marginY = Math.round(pH * 0.07 * 10) / 10;
-        var recW = Math.round((pW - marginX * 2) * 10) / 10;
-        var recH = Math.round((pH - marginY * 2) * 10) / 10;
+        var activePage = (ctx.app.activeWindow && ctx.app.activeWindow.activePage)
+            ? ctx.app.activeWindow.activePage
+            : doc.pages.item(0);
+        var box = getPageMarginBox(doc, activePage, unitCode);
 
         return '{"hasDoc":true,"unit":"' + unitCode + '"' +
-            ',"pageW":' + pW +
-            ',"pageH":' + pH +
-            ',"w":' + recW +
-            ',"h":' + recH +
-            ',"x":' + marginX +
-            ',"y":' + marginY + '}';
+            ',"pageW":' + box.pageW +
+            ',"pageH":' + box.pageH +
+            ',"w":' + box.w +
+            ',"h":' + box.h +
+            ',"x":' + box.x +
+            ',"y":' + box.y + '}';
     } catch (err) {
-        return '{"hasDoc":false,"unit":"mm","pageW":210,"pageH":297,"w":174,"h":250,"x":18,"y":18}';
+        return '{"hasDoc":false,"unit":"mm","pageW":210,"pageH":297,"w":184.6,"h":271.6,"x":12.7,"y":12.7}';
+    }
+}
+
+function getHostThemeInfo() {
+    try {
+        var ctx = getInDesignContext();
+        if (!ctx || !ctx.app) {
+            return '{"hasHost":false,"brightness":0.0,"theme":"dark"}';
+        }
+        var b = 0.0;
+        try {
+            b = parseFloat(ctx.app.generalPreferences.uiBrightnessPreference);
+        } catch (eB) {
+            b = 0.0;
+        }
+        if (isNaN(b)) {
+            b = 0.0;
+        }
+        var themeName = "dark";
+        if (b >= 0.85) {
+            themeName = "light";
+        } else if (b >= 0.505) {
+            themeName = "medium-light";
+        } else if (b >= 0.25) {
+            themeName = "medium-dark";
+        } else {
+            themeName = "dark";
+        }
+        return '{"hasHost":true,"brightness":' + b + ',"theme":"' + themeName + '"}';
+    } catch (e) {
+        return '{"hasHost":false,"brightness":0.0,"theme":"dark"}';
     }
 }
 
@@ -277,9 +407,8 @@ function getNthWeekdayOfMonth(year, month, targetWeekday, nth) {
         var day = 1 + diff + (nth - 1) * 7;
         return { month: month, day: day };
     } else {
-        var lastDate = new Date(year, month + 1, 0);
-        var lastDayNum = lastDate.getDate();
-        var lastWday = lastDate.getDay();
+        var lastDayNum = getDaysInMonth(year, month);
+        var lastWday = new Date(year, month, lastDayNum).getDay();
         var diffBack = (lastWday - targetWeekday + 7) % 7;
         return { month: month, day: lastDayNum - diffBack };
     }
@@ -340,10 +469,10 @@ function getYearHolidays(year, country, lang) {
         addHoliday(0, 7, false, "Սբ. Ծննդյան Մեռելոց", "Christmas Memorial", "День поминовения");
         addHoliday(0, 28, false, "Բանակի օր", "Army Day", "День Армии");
         addHoliday(2, 8, false, "Կանանց տոն", "Women's Day", "Женский день");
-        addHoliday(3, 7, false, "Մայրության և գեղեցկության տոն", "Motherhood & Beauty Day", "День материнства и красоты");
+        addHoliday(3, 7, false, "Մայրության եւ գեղեցկության տոն", "Motherhood & Beauty Day", "День материнства и красоты");
         addHoliday(3, 24, false, "Ցեղասպանության զոհերի հիշատակի օր", "Genocide Remembrance Day", "День памяти жертв Геноцида");
         addHoliday(4, 1, false, "Աշխատանքի օր", "Labor Day", "День труда");
-        addHoliday(4, 9, false, "Հաղթանակի և խաղաղության տոն", "Victory & Peace Day", "День Победы и мира");
+        addHoliday(4, 9, false, "Հաղթանակի եւ խաղաղության տոն", "Victory & Peace Day", "День Победы и мира");
         addHoliday(4, 28, false, "Հանրապետության տոն", "Republic Day", "День Республики");
         addHoliday(6, 5, false, "Սահմանադրության օր", "Constitution Day", "День Конституции");
         addHoliday(8, 21, false, "Անկախության տոն", "Independence Day", "День Независимости");
@@ -379,7 +508,7 @@ function getYearHolidays(year, country, lang) {
         addHoliday(0, 8, false, "Ամանորյա տոներ", "New Year Holiday", "Новогодние каникулы");
         addHoliday(1, 23, false, "Հայրենիքի պաշտպանի օր", "Defender of the Fatherland", "День защитника Отечества");
         addHoliday(2, 8, false, "Կանանց միջազգային օր", "Women's Day", "Международный женский день");
-        addHoliday(4, 1, false, "Գարնան և աշխատանքի տոն", "Spring and Labor Day", "Праздник Весны и Труда");
+        addHoliday(4, 1, false, "Գարնան եւ աշխատանքի տոն", "Spring and Labor Day", "Праздник Весны и Труда");
         addHoliday(4, 9, false, "Հաղթանակի օր", "Victory Day", "День Победы");
         addHoliday(5, 12, false, "Ռուսաստանի օր", "Russia Day", "День России");
         addHoliday(10, 4, false, "Ժողովրդական միասնության օր", "Unity Day", "День народного единства");
@@ -666,6 +795,18 @@ function applyTableBatchCellStyle(table, vJustEnum, padXStr, padYStr, strokeWeig
     }
 }
 
+function findExistingSkeletonFrameOnPage(page) {
+    try {
+        for (var i = 0; i < page.textFrames.length; i++) {
+            var tf = page.textFrames.item(i);
+            if (tf && tf.isValid && tf.label === "CALENDAR_SKELETON_FRAME") {
+                return tf;
+            }
+        }
+    } catch (e) {}
+    return null;
+}
+
 function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
     var ctx = getInDesignContext();
     if (!ctx || !ctx.app) {
@@ -687,13 +828,12 @@ function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
             ? hostApp.activeWindow.activePage
             : doc.pages.item(0);
 
-        clearPageCalendarFrames(activePage);
-
-        var sh1 = getOrCreateHexColor(doc, ctx, "#DCE3EC");
-        var sh2 = getOrCreateHexColor(doc, ctx, "#EEF3F8");
-        var sh3 = getOrCreateHexColor(doc, ctx, "#C5D1E0");
-        var shBarColor = getOrCreateHexColor(doc, ctx, "#9AA8B8");
-        var shimmerPalette = [sh1, sh2, sh3];
+        var sh1 = getOrCreateHexColor(doc, ctx, "#D8E2EE");
+        var sh2 = getOrCreateHexColor(doc, ctx, "#E5EDF7");
+        var sh3 = getOrCreateHexColor(doc, ctx, "#F3F7FC");
+        var sh4 = getOrCreateHexColor(doc, ctx, "#FFFFFF");
+        var sh5 = getOrCreateHexColor(doc, ctx, "#E5EDF7");
+        var shimmerPalette = [sh1, sh2, sh3, sh4, sh5];
         var stepOffset = parseInt(shimmerStep, 10) || 0;
 
         var showTitle = (cfg.showTitle !== false);
@@ -702,59 +842,93 @@ function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
         var weekRows = 5;
         var totalRows = weekRows + (showTitle ? 1 : 0) + (showWeekdays ? 1 : 0) + (showFooter ? 1 : 0);
 
-        var frameTop = parseFloat(cfg.tableTop) || 18;
-        var frameLeft = parseFloat(cfg.tableLeft) || 18;
-        var frameWidth = parseFloat(cfg.tableWidth) || 174;
-        var frameHeight = parseFloat(cfg.tableHeight) || 250;
+        var pageBox = getPageMarginBox(doc, activePage, unitSuffix);
+        var useAutoMargins = Boolean(cfg.usePageMargins);
 
-        var textFrame = activePage.textFrames.add();
-        try {
-            textFrame.itemLayer = calLayer;
-        } catch (eL) {}
-        try {
-            textFrame.label = "CALENDAR_SKELETON_FRAME";
-        } catch (eLb) {}
-        textFrame.geometricBounds = [
-            frameTop + unitSuffix,
-            frameLeft + unitSuffix,
-            (frameTop + frameHeight) + unitSuffix,
-            (frameLeft + frameWidth) + unitSuffix
-        ];
+        var frameTop = useAutoMargins ? pageBox.y : parseFloat(cfg.tableTop);
+        var frameLeft = useAutoMargins ? pageBox.x : parseFloat(cfg.tableLeft);
+        var frameWidth = useAutoMargins ? pageBox.w : parseFloat(cfg.tableWidth);
+        var frameHeight = useAutoMargins ? pageBox.h : parseFloat(cfg.tableHeight);
 
-        var table = textFrame.insertionPoints.item(0).tables.add({
-            bodyRowCount: totalRows,
-            columnCount: 7
-        });
+        if (isNaN(frameTop) || frameTop < 0) frameTop = pageBox.y;
+        if (isNaN(frameLeft) || frameLeft < 0) frameLeft = pageBox.x;
+        if (isNaN(frameWidth) || frameWidth <= 10) frameWidth = pageBox.w;
+        if (isNaN(frameHeight) || frameHeight <= 10) frameHeight = pageBox.h;
 
-        var colWidthVal = Math.floor(((frameWidth * 0.99) / 7) * 100) / 100;
-        for (var colW = 0; colW < 7; colW++) {
-            table.columns.item(colW).width = colWidthVal + unitSuffix;
+        var textFrame = (stepOffset > 0) ? findExistingSkeletonFrameOnPage(activePage) : null;
+        var table = null;
+
+        if (textFrame && textFrame.tables && textFrame.tables.length > 0) {
+            table = textFrame.tables.item(0);
+            if (table.rows.length !== totalRows) {
+                textFrame = null;
+                table = null;
+            }
+        } else {
+            textFrame = null;
         }
 
-        var rowH = Math.floor((frameHeight / totalRows) * 10) / 10;
-        for (var rIdx = 0; rIdx < totalRows; rIdx++) {
-            var rowObj = table.rows.item(rIdx);
-            rowObj.height = rowH + unitSuffix;
-            for (var cIdx = 0; cIdx < 7; cIdx++) {
-                var cell = rowObj.cells.item(cIdx);
-                var shColor = shimmerPalette[(rIdx + cIdx + stepOffset) % 3];
-                cell.fillColor = shColor;
-                cell.contents = "▬▬";
+        if (!textFrame || !table) {
+            clearPageCalendarFrames(activePage);
+
+            textFrame = activePage.textFrames.add();
+            try {
+                textFrame.itemLayer = calLayer;
+            } catch (eL) {}
+            try {
+                textFrame.label = "CALENDAR_SKELETON_FRAME";
+            } catch (eLb) {}
+
+            var bTop = pageBox.pageOriginTop + frameTop;
+            var bLeft = pageBox.pageOriginLeft + frameLeft;
+            textFrame.geometricBounds = [
+                bTop + unitSuffix,
+                bLeft + unitSuffix,
+                (bTop + frameHeight) + unitSuffix,
+                (bLeft + frameWidth) + unitSuffix
+            ];
+
+            table = textFrame.insertionPoints.item(0).tables.add({
+                bodyRowCount: totalRows,
+                columnCount: 7
+            });
+
+            var colWidthVal = Math.floor(((frameWidth * 0.985) / 7) * 100) / 100;
+            for (var colW = 0; colW < 7; colW++) {
+                table.columns.item(colW).width = colWidthVal + unitSuffix;
+            }
+
+            var rowH = Math.floor(((frameHeight * 0.97) / totalRows) * 100) / 100;
+            for (var rInit = 0; rInit < totalRows; rInit++) {
+                var rObj = table.rows.item(rInit);
+                try {
+                    rObj.autoGrow = false;
+                } catch (eAg) {}
+                rObj.height = rowH + unitSuffix;
+            }
+
+            if (showTitle) {
+                try {
+                    table.rows.item(0).cells.item(0).merge(table.rows.item(0).cells.item(6));
+                } catch (eMt) {}
+            }
+            if (showFooter) {
+                try {
+                    var lastR = totalRows - 1;
+                    table.rows.item(lastR).cells.item(0).merge(table.rows.item(lastR).cells.item(6));
+                } catch (eMf) {}
             }
         }
 
-        var allText = textFrame.texts.item(0);
-        allText.pointSize = cfg.daySize || 12;
-        allText.fillColor = shBarColor;
-        var hJust = getHorizontalJustificationEnum(ctx, cfg.cellAlignH);
-        if (hJust) {
-            allText.justification = hJust;
-        }
-
-        if (showTitle) {
-            var tCell = table.rows.item(0).cells.item(0).merge(table.rows.item(0).cells.item(6));
-            tCell.fillColor = shimmerPalette[stepOffset % 3];
-            tCell.contents = "▬▬▬▬▬▬▬▬▬▬▬▬";
+        var rowCount = table.rows.length;
+        for (var rIdx = 0; rIdx < rowCount; rIdx++) {
+            var rowObj = table.rows.item(rIdx);
+            var cellCount = rowObj.cells.length;
+            for (var cIdx = 0; cIdx < cellCount; cIdx++) {
+                var cell = rowObj.cells.item(cIdx);
+                var waveIdx = (rIdx + cIdx + stepOffset * 2) % shimmerPalette.length;
+                cell.fillColor = shimmerPalette[waveIdx];
+            }
         }
 
         try {
@@ -770,7 +944,11 @@ function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
 }
 
 function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, yearHolidays, colors, fonts) {
-    var numYear = cfg.year;
+    var numYear = parseInt(cfg.year, 10) || 2026;
+    var mIdx = parseInt(monthIndex, 10);
+    if (isNaN(mIdx) || mIdx < 0 || mIdx > 11) {
+        mIdx = 0;
+    }
     var isMondayStart = (cfg.startDay === "mon");
     var usePadding = Boolean(cfg.showPadding);
     var showTitle = (cfg.showTitle !== false);
@@ -781,20 +959,23 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
     var unitSuffix = cfg.unit || "mm";
 
     var locale = getLocaleData(cfg.lang);
-    var monthName = locale.months[monthIndex];
+    var monthName = locale.months[mIdx] || locale.months[0];
     var dayHeaders = isMondayStart ? locale.daysMon : locale.daysSun;
 
-    var firstDayOfMonth = new Date(numYear, monthIndex, 1).getDay();
+    var firstDayOfMonth = new Date(numYear, mIdx, 1).getDay();
     var startOffset = isMondayStart ? ((firstDayOfMonth + 6) % 7) : firstDayOfMonth;
-    var daysInCurrentMonth = new Date(numYear, monthIndex + 1, 0).getDate();
-    var daysInPrevMonth = new Date(numYear, monthIndex, 0).getDate();
+    var daysInCurrentMonth = getDaysInMonth(numYear, mIdx);
+    var daysInPrevMonth = getDaysInMonth(numYear, mIdx - 1);
 
     var weekRows = Math.ceil((startOffset + daysInCurrentMonth) / 7);
+    if (isNaN(weekRows) || weekRows < 4) {
+        weekRows = 5;
+    }
 
     var monthHolidayEntries = [];
     if (enableHolidays) {
         for (var dCheck = 1; dCheck <= daysInCurrentMonth; dCheck++) {
-            var hKey = monthIndex + "-" + dCheck;
+            var hKey = mIdx + "-" + dCheck;
             if (yearHolidays[hKey]) {
                 monthHolidayEntries.push(yearHolidays[hKey]);
             }
@@ -805,22 +986,25 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
     var headerRowsCount = (showTitle ? 1 : 0) + (showWeekdays ? 1 : 0);
     var totalRows = weekRows + headerRowsCount + (hasFooterRow ? 1 : 0);
 
-    var frameTop = parseFloat(cfg.tableTop);
-    var frameLeft = parseFloat(cfg.tableLeft);
-    var frameWidth = parseFloat(cfg.tableWidth);
-    var frameHeight = parseFloat(cfg.tableHeight);
+    var pageBox = getPageMarginBox(doc, page, unitSuffix);
+    var useAutoMargins = Boolean(cfg.usePageMargins);
+
+    var frameTop = useAutoMargins ? pageBox.y : parseFloat(cfg.tableTop);
+    var frameLeft = useAutoMargins ? pageBox.x : parseFloat(cfg.tableLeft);
+    var frameWidth = useAutoMargins ? pageBox.w : parseFloat(cfg.tableWidth);
+    var frameHeight = useAutoMargins ? pageBox.h : parseFloat(cfg.tableHeight);
 
     if (isNaN(frameTop) || frameTop < 0) {
-        frameTop = 18;
+        frameTop = pageBox.y;
     }
     if (isNaN(frameLeft) || frameLeft < 0) {
-        frameLeft = 18;
+        frameLeft = pageBox.x;
     }
     if (isNaN(frameWidth) || frameWidth <= 10) {
-        frameWidth = 174;
+        frameWidth = pageBox.w;
     }
     if (isNaN(frameHeight) || frameHeight <= 10) {
-        frameHeight = 250;
+        frameHeight = pageBox.h;
     }
 
     var padXVal = parseFloat(cfg.cellPadX);
@@ -836,12 +1020,54 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
         cellMarginPt = 0.75;
     }
 
-    var padXStr = padXVal + unitSuffix;
-    var padYStr = padYVal + unitSuffix;
+    var strokeInUnit = ptToUnit(cellMarginPt, unitSuffix);
+    var safetyHeightAllowance = strokeInUnit * (totalRows + 2) + ptToUnit(4, unitSuffix);
+
+    var summaryParts = [];
+    if (hasFooterRow) {
+        for (var hIdx = 0; hIdx < monthHolidayEntries.length; hIdx++) {
+            var hItem = monthHolidayEntries[hIdx];
+            var tag = hItem.isMovable ? (" (" + locale.movableTag + ")") : "";
+            summaryParts.push(hItem.day + " " + monthName + " — " + hItem.name + tag);
+        }
+    }
+    var footerContentStr = summaryParts.join("   |   ");
+    var estFooterLines = hasFooterRow ? Math.max(1, Math.min(3, Math.ceil(footerContentStr.length / 60))) : 0;
+
+    var minTitleH = showTitle ? (ptToUnit((cfg.titleSize || 18) * 1.35, unitSuffix) + strokeInUnit * 2 + ptToUnit(2, unitSuffix)) : 0;
+    var minHeaderH = showWeekdays ? (ptToUnit((cfg.headerSize || 11) * 1.35, unitSuffix) + strokeInUnit * 2 + ptToUnit(2, unitSuffix)) : 0;
+    var minFooterH = hasFooterRow ? (ptToUnit(8.5 * 1.35 * estFooterLines, unitSuffix) + strokeInUnit * 2 + ptToUnit(2, unitSuffix)) : 0;
+
+    var titleRowH = showTitle ? Math.max(Math.round(frameHeight * 0.08 * 100) / 100, Math.ceil(minTitleH * 100) / 100) : 0;
+    var headerRowH = showWeekdays ? Math.max(Math.round(frameHeight * 0.055 * 100) / 100, Math.ceil(minHeaderH * 100) / 100) : 0;
+    var footerRowH = hasFooterRow ? Math.max(Math.round(frameHeight * 0.065 * 100) / 100, Math.ceil(minFooterH * 100) / 100) : 0;
+
+    // Ensure non-day rows never consume more than 35% of frameHeight
+    var nonDayTotal = titleRowH + headerRowH + footerRowH;
+    if (nonDayTotal > frameHeight * 0.35 && nonDayTotal > 0) {
+        var scaleNonDay = (frameHeight * 0.35) / nonDayTotal;
+        titleRowH = Math.floor(titleRowH * scaleNonDay * 100) / 100;
+        headerRowH = Math.floor(headerRowH * scaleNonDay * 100) / 100;
+        footerRowH = Math.floor(footerRowH * scaleNonDay * 100) / 100;
+        nonDayTotal = titleRowH + headerRowH + footerRowH;
+    }
+
+    var remainingH = Math.max(weekRows * ptToUnit(12, unitSuffix), frameHeight - nonDayTotal - safetyHeightAllowance);
+    var dayRowH = Math.floor((remainingH / weekRows) * 100) / 100;
+
+    // Clamp cell vertical inset so padding never exceeds 20% of dayRowH
+    var safePadYVal = Math.min(padYVal, Math.max(0, Math.floor((dayRowH * 0.18) * 100) / 100));
+    var safePadXVal = Math.min(padXVal, Math.max(0, Math.floor(((frameWidth / 7) * 0.18) * 100) / 100));
+    var compactPadYStr = Math.min(safePadYVal, ptToUnit(1.5, unitSuffix)) + unitSuffix;
+
+    var padXStr = safePadXVal + unitSuffix;
+    var padYStr = safePadYVal + unitSuffix;
     var strokeWeightStr = cellMarginPt + "pt";
 
-    var frameBottom = frameTop + frameHeight;
-    var frameRight = frameLeft + frameWidth;
+    var bTop = pageBox.pageOriginTop + frameTop;
+    var bLeft = pageBox.pageOriginLeft + frameLeft;
+    var bBottom = bTop + frameHeight;
+    var bRight = bLeft + frameWidth;
 
     var textFrame = page.textFrames.add();
     try {
@@ -851,39 +1077,32 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
         textFrame.label = "CALENDAR_GENERATOR_FRAME";
     } catch (eLabel) {}
     textFrame.geometricBounds = [
-        frameTop + unitSuffix,
-        frameLeft + unitSuffix,
-        frameBottom + unitSuffix,
-        frameRight + unitSuffix
+        bTop + unitSuffix,
+        bLeft + unitSuffix,
+        bBottom + unitSuffix,
+        bRight + unitSuffix
     ];
+    try {
+        if (textFrame.textFramePreferences) {
+            textFrame.textFramePreferences.insetSpacing = [0, 0, 0, 0];
+        }
+    } catch (eTfp) {}
 
     var table = textFrame.insertionPoints.item(0).tables.add({
         bodyRowCount: totalRows,
         columnCount: 7
     });
 
-    var colWidthVal = Math.floor(((frameWidth * 0.99) / 7) * 100) / 100;
+    var safeTableW = Math.max(10, frameWidth - (strokeInUnit * 3) - ptToUnit(2, unitSuffix));
+    var colWidthVal = Math.floor((safeTableW / 7) * 100) / 100;
     for (var colW = 0; colW < 7; colW++) {
         table.columns.item(colW).width = colWidthVal + unitSuffix;
     }
-
-    var titleRowH = showTitle ? Math.round(frameHeight * 0.08 * 10) / 10 : 0;
-    var headerRowH = showWeekdays ? Math.round(frameHeight * 0.055 * 10) / 10 : 0;
-    var footerRowH = hasFooterRow ? Math.round(frameHeight * 0.065 * 10) / 10 : 0;
-    var remainingH = Math.max(weekRows * (frameHeight * 0.08), frameHeight - titleRowH - headerRowH - footerRowH - (frameHeight * 0.02));
-    var dayRowH = Math.floor((remainingH / weekRows) * 100) / 100;
 
     var vJustEnum = getVerticalJustificationEnum(ctx, cfg.cellAlignV);
     var hJustEnum = getHorizontalJustificationEnum(ctx, cfg.cellAlignH);
     var centerHJust = getHorizontalJustificationEnum(ctx, "CENTER");
     var centerVJust = getVerticalJustificationEnum(ctx, "CENTER");
-
-    for (var rIdx = 0; rIdx < totalRows; rIdx++) {
-        table.rows.item(rIdx).height = dayRowH + unitSuffix;
-    }
-
-    // Batch apply cell insets (padding), stroke weight (margin), and vertical alignment
-    applyTableBatchCellStyle(table, vJustEnum, padXStr, padYStr, strokeWeightStr);
 
     var currentRowCursor = 0;
     var titleRowIdx = -1;
@@ -899,14 +1118,38 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
     }
 
     var dayStartRow = currentRowCursor;
+    var footerRowIndex = hasFooterRow ? (dayStartRow + weekRows) : -1;
     var totalDayCells = weekRows * 7;
 
-    // Step 1: Fast content population first, then batch-apply base typography on textFrame.texts.item(0)
+    // Assign exact row heights and disable autoGrow so no row can ever push the table into overset
+    for (var rIdx = 0; rIdx < totalRows; rIdx++) {
+        var rowItem = table.rows.item(rIdx);
+        try {
+            rowItem.autoGrow = false;
+        } catch (eAutoGrow) {}
+        if (rIdx === titleRowIdx) {
+            rowItem.height = titleRowH + unitSuffix;
+        } else if (rIdx === weekdayRowIdx) {
+            rowItem.height = headerRowH + unitSuffix;
+        } else if (rIdx === footerRowIndex) {
+            rowItem.height = footerRowH + unitSuffix;
+        } else {
+            rowItem.height = dayRowH + unitSuffix;
+        }
+    }
+
+    // Batch apply cell insets (padding), stroke weight (margin), and vertical alignment
+    applyTableBatchCellStyle(table, vJustEnum, padXStr, padYStr, strokeWeightStr);
+
+    // Populate weekday headers and day cells
     if (showWeekdays) {
         var wRow = table.rows.item(weekdayRowIdx);
-        wRow.height = headerRowH + unitSuffix;
         for (var wCol = 0; wCol < 7; wCol++) {
             var wCell = wRow.cells.item(wCol);
+            try {
+                wCell.topInset = compactPadYStr;
+                wCell.bottomInset = compactPadYStr;
+            } catch (eWPad) {}
             wCell.contents = dayHeaders[wCol];
             wCell.fillColor = colors.headerBg;
             if (centerVJust) {
@@ -932,7 +1175,7 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
             }
         } else if (i < startOffset + daysInCurrentMonth) {
             var currentDay = i - startOffset + 1;
-            var holidayInfo = enableHolidays ? yearHolidays[monthIndex + "-" + currentDay] : null;
+            var holidayInfo = enableHolidays ? yearHolidays[mIdx + "-" + currentDay] : null;
             if (holidayInfo && showInCellHoliday) {
                 dayCell.contents = String(currentDay) + "\r" + holidayInfo.name;
             } else {
@@ -957,7 +1200,7 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
         }
     }
 
-    // Batch-apply default day font, size, color, and alignment to the entire story in 4 calls!
+    // Batch-apply default day font, size, color, and alignment to the story
     var storyText = textFrame.texts.item(0);
     applySafeFont(storyText, fonts.day);
     storyText.pointSize = cfg.daySize;
@@ -966,10 +1209,14 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
     }
     storyText.fillColor = colors.dayText;
 
-    // Now style only the special cells (Title, Weekdays, Padding, Weekends, Holidays, Footer)
-    if (showTitle) {
+    // Style Title Row
+    if (showTitle && titleRowIdx >= 0) {
         var titleCell = table.rows.item(titleRowIdx).cells.item(0).merge(table.rows.item(titleRowIdx).cells.item(6));
-        titleCell.height = titleRowH + unitSuffix;
+        try {
+            titleCell.topInset = compactPadYStr;
+            titleCell.bottomInset = compactPadYStr;
+        } catch (eTPad) {}
+        table.rows.item(titleRowIdx).height = titleRowH + unitSuffix;
         titleCell.fillColor = colors.titleBg;
         if (centerVJust) {
             titleCell.verticalJustification = centerVJust;
@@ -984,7 +1231,32 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
         titleText.fillColor = colors.titleText;
     }
 
-    if (showWeekdays) {
+    // Style Footer Row before day cell overrides so row structure is finalized
+    if (hasFooterRow && footerRowIndex >= 0) {
+        var footerCell = table.rows.item(footerRowIndex).cells.item(0).merge(table.rows.item(footerRowIndex).cells.item(6));
+        try {
+            footerCell.topInset = compactPadYStr;
+            footerCell.bottomInset = compactPadYStr;
+        } catch (eFPad) {}
+        table.rows.item(footerRowIndex).height = footerRowH + unitSuffix;
+        footerCell.fillColor = colors.headerBg;
+        if (centerVJust) {
+            footerCell.verticalJustification = centerVJust;
+        }
+        footerCell.contents = footerContentStr;
+        var fText = footerCell.texts.item(0);
+        if (fonts.header !== fonts.day) {
+            applySafeFont(fText, fonts.header);
+        }
+        fText.pointSize = 8.5;
+        if (centerHJust) {
+            fText.justification = centerHJust;
+        }
+        fText.fillColor = colors.headerText;
+    }
+
+    // Style Weekday Row
+    if (showWeekdays && weekdayRowIdx >= 0) {
         var wkRow = table.rows.item(weekdayRowIdx);
         for (var col = 0; col < 7; col++) {
             var wText = wkRow.cells.item(col).texts.item(0);
@@ -999,6 +1271,8 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
         }
     }
 
+    // Style Padding, Weekend, and Holiday cells
+    var holidayCaptionPt = Math.min(7, Math.max(5, Math.round((cfg.daySize || 12) * 0.58)));
     for (var idx = 0; idx < totalDayCells; idx++) {
         var rDay = Math.floor(idx / 7) + dayStartRow;
         var cDay = idx % 7;
@@ -1006,59 +1280,56 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
 
         if (idx < startOffset || idx >= startOffset + daysInCurrentMonth) {
             if (usePadding) {
-                var pCellText = table.rows.item(rDay).cells.item(cDay).texts.item(0);
-                pCellText.pointSize = cfg.paddingSize;
-                pCellText.fillColor = colors.paddingText;
+                try {
+                    var pCellText = table.rows.item(rDay).cells.item(cDay).texts.item(0);
+                    pCellText.pointSize = cfg.paddingSize;
+                    pCellText.fillColor = colors.paddingText;
+                } catch (ePadTxt) {}
             }
         } else {
             var curDayNum = idx - startOffset + 1;
-            var hObj = enableHolidays ? yearHolidays[monthIndex + "-" + curDayNum] : null;
+            var hObj = enableHolidays ? yearHolidays[mIdx + "-" + curDayNum] : null;
             if (hObj) {
-                var hCell = table.rows.item(rDay).cells.item(cDay);
-                var hText = hCell.texts.item(0);
-                hText.fillColor = hObj.isMovable ? colors.movableText : colors.holidayText;
-                if (hCell.paragraphs.length > 1) {
-                    hCell.paragraphs.item(0).pointSize = isWknd ? cfg.weekendSize : cfg.daySize;
-                    hCell.paragraphs.item(1).pointSize = 7;
-                } else if (isWknd && cfg.weekendSize !== cfg.daySize) {
-                    hText.pointSize = cfg.weekendSize;
-                }
+                try {
+                    var hCell = table.rows.item(rDay).cells.item(cDay);
+                    var hText = hCell.texts.item(0);
+                    hText.fillColor = hObj.isMovable ? colors.movableText : colors.holidayText;
+                    if (hCell.paragraphs && hCell.paragraphs.length > 1) {
+                        hCell.paragraphs.item(0).pointSize = isWknd ? cfg.weekendSize : cfg.daySize;
+                        hCell.paragraphs.item(1).pointSize = holidayCaptionPt;
+                    } else if (isWknd && cfg.weekendSize !== cfg.daySize) {
+                        hText.pointSize = cfg.weekendSize;
+                    }
+                } catch (eHolTxt) {}
             } else if (isWknd) {
-                var wkText = table.rows.item(rDay).cells.item(cDay).texts.item(0);
-                if (cfg.weekendSize !== cfg.daySize) {
-                    wkText.pointSize = cfg.weekendSize;
-                }
-                wkText.fillColor = colors.weekendText;
+                try {
+                    var wkText = table.rows.item(rDay).cells.item(cDay).texts.item(0);
+                    if (cfg.weekendSize !== cfg.daySize) {
+                        wkText.pointSize = cfg.weekendSize;
+                    }
+                    wkText.fillColor = colors.weekendText;
+                } catch (eWkTxt) {}
             }
         }
     }
 
-    if (hasFooterRow) {
-        var footerRowIndex = dayStartRow + weekRows;
-        var footerCell = table.rows.item(footerRowIndex).cells.item(0).merge(table.rows.item(footerRowIndex).cells.item(6));
-        footerCell.height = footerRowH + unitSuffix;
-        footerCell.fillColor = colors.headerBg;
-        if (centerVJust) {
-            footerCell.verticalJustification = centerVJust;
+    // Final overflow guard: if the frame still overflows for any reason, scale row heights down slightly
+    try {
+        if (textFrame.recompose) {
+            textFrame.recompose();
         }
-
-        var summaryParts = [];
-        for (var hIdx = 0; hIdx < monthHolidayEntries.length; hIdx++) {
-            var hItem = monthHolidayEntries[hIdx];
-            var tag = hItem.isMovable ? (" (" + locale.movableTag + ")") : "";
-            summaryParts.push(hItem.day + " " + monthName + " — " + hItem.name + tag);
+        var guardAttempt = 0;
+        while (textFrame.overflows && guardAttempt < 4) {
+            guardAttempt++;
+            dayRowH = Math.floor(dayRowH * 0.92 * 100) / 100;
+            for (var rFix = dayStartRow; rFix < dayStartRow + weekRows; rFix++) {
+                table.rows.item(rFix).height = dayRowH + unitSuffix;
+            }
+            if (textFrame.recompose) {
+                textFrame.recompose();
+            }
         }
-        footerCell.contents = summaryParts.join("   |   ");
-        var fText = footerCell.texts.item(0);
-        if (fonts.header !== fonts.day) {
-            applySafeFont(fText, fonts.header);
-        }
-        fText.pointSize = 8.5;
-        if (centerHJust) {
-            fText.justification = centerHJust;
-        }
-        fText.fillColor = colors.headerText;
-    }
+    } catch (eGuard) {}
 }
 
 function parseConfigString(rawStr) {
@@ -1177,10 +1448,11 @@ function generateCalendar(year, monthIndex, lang, startDay, showPadding) {
         showPadding: (showPadding === true || showPadding === "true"),
         country: "AM",
         unit: "mm",
-        tableWidth: 174,
-        tableHeight: 250,
-        tableLeft: 18,
-        tableTop: 18,
+        usePageMargins: true,
+        tableWidth: 184.6,
+        tableHeight: 271.6,
+        tableLeft: 12.7,
+        tableTop: 12.7,
         cellPadX: 1.5,
         cellPadY: 1.5,
         cellMargin: 0.75,
@@ -1218,5 +1490,7 @@ if (typeof window !== "undefined") {
     window.renderSkeletonShimmerInDesign = renderSkeletonShimmerInDesign;
     window.getYearHolidays = getYearHolidays;
     window.getDocumentUnitAndSize = getDocumentUnitAndSize;
+    window.getHostThemeInfo = getHostThemeInfo;
+    window.getDaysInMonth = getDaysInMonth;
     window.getLocaleData = getLocaleData;
 }
