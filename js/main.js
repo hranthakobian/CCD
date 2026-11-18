@@ -3,7 +3,7 @@
 
     var csInterface = new CSInterface();
 
-    var PLUGIN_VERSION = "1.1.0";
+    var PLUGIN_VERSION = "1.2.0";
     var GITHUB_REPO = "hranthakobian/CCD";
     var GITHUB_RELEASES_API = "https://api.github.com/repos/" + GITHUB_REPO + "/releases/latest";
     var GITHUB_RELEASES_LIST_API = "https://api.github.com/repos/" + GITHUB_REPO + "/releases";
@@ -43,8 +43,22 @@
             loadingGenerating: "Ստեղծվում է օրացույցը InDesign-ում...",
             loadingDone: "Ավարտված է (100%)",
             startPreviewBtn: "▶ Սկսել",
-            liveActiveBtn: "Ուղիղ Նախադիտում՝ ՄԻԱՑՎԱԾ Է (Անջատել)",
-            liveInactiveBtn: "Ուղիղ Նախադիտում՝ ԱՆՋԱՏՎԱԾ Է (Միացնել)",
+            startPreviewText: "Սկսել",
+            refreshBtn: "↻ Թարմացնել",
+            refreshText: "Թարմացնել",
+            refreshBtnTitle: "Թարմացնել InDesign-ում",
+            liveActiveBtn: "Ուղիղ Նախադիտում՝ ՄԻԱՑՎԱԾ",
+            liveInactiveBtn: "Ուղիղ Նախադիտում՝ ԱՆՋԱՏՎԱԾ",
+            livePreviewShort: "Ուղիղ Նախադիտում",
+            genCalendarBtn: "Ստեղծել օրացույցը",
+            genAllText: "Ստեղծել (12 էջ)",
+            genSingleText: "Ստեղծել (1 էջ)",
+            resetDocBtn: "Մաքուր թուղթ",
+            scopeBadge12: "12 էջ",
+            scopeBadge1: "1 էջ",
+            statusCleaningDoc: "Մաքրվում է փաստաթուղթը...",
+            statusDocCleaned: "Փաստաթուղթը մաքրվեց (Մաքուր թուղթ)։",
+            statusAutoSynced: "InDesign-ը միացված է․ ինքնաթարմացվեց։",
             previewScopeLabel: "Նախադիտման եւ ստեղծման ծավալ",
             scopeAll12: "Բոլոր 12 ամիսները (12 էջ)",
             scopeSingle1: "Միայն ընտրված ամիսը (1 էջ)",
@@ -174,8 +188,22 @@
             loadingGenerating: "Generating calendar in InDesign...",
             loadingDone: "Completed (100%)",
             startPreviewBtn: "▶ Start",
-            liveActiveBtn: "Live Preview: ON (Turn Off)",
-            liveInactiveBtn: "Live Preview: OFF (Turn On)",
+            startPreviewText: "Start",
+            refreshBtn: "↻ Refresh",
+            refreshText: "Refresh",
+            refreshBtnTitle: "Refresh in InDesign",
+            liveActiveBtn: "Live Preview: ON",
+            liveInactiveBtn: "Live Preview: OFF",
+            livePreviewShort: "Live Preview",
+            genCalendarBtn: "Generate Calendar",
+            genAllText: "Generate (12 Pages)",
+            genSingleText: "Generate (1 Page)",
+            resetDocBtn: "Clean Page",
+            scopeBadge12: "12 Pages",
+            scopeBadge1: "1 Page",
+            statusCleaningDoc: "Cleaning document...",
+            statusDocCleaned: "Document cleared (Clean sheet).",
+            statusAutoSynced: "Connected to InDesign: auto-updated.",
             previewScopeLabel: "Preview & Generation Scope",
             scopeAll12: "All 12 Months (12 Pages)",
             scopeSingle1: "Selected Month Only (1 Page)",
@@ -351,12 +379,67 @@
 
         var liveChk = byId("inDesignLivePreview");
         var toggleBtn = byId("toggleLivePreviewBtn");
+        var liveText = byId("liveBtnText");
         if (toggleBtn && liveChk) {
-            toggleBtn.textContent = liveChk.checked ? t("liveActiveBtn") : t("liveInactiveBtn");
+            toggleBtn.className = liveChk.checked ? "btn-action btn-live active" : "btn-action btn-live inactive";
+            if (liveText) {
+                liveText.textContent = t("livePreviewShort");
+            }
         }
 
         updateAlignReadouts();
+        updateScopeUI();
+        updateStartButtonState(isRendering);
         updatePanelPreview();
+    }
+
+    var isStarted = false;
+
+    function updateScopeUI() {
+        var previewModeEl = byId("previewModeSelect");
+        var mode = previewModeEl ? previewModeEl.value : "all";
+        var scopeBadge = byId("previewScopeBadge");
+        var genBtnText = byId("generateBtnText");
+
+        if (scopeBadge) {
+            scopeBadge.textContent = (mode === "all") ? t("scopeBadge12") : t("scopeBadge1");
+        }
+        if (genBtnText) {
+            genBtnText.textContent = (mode === "all") ? t("genAllText") : t("genSingleText");
+        }
+    }
+
+    function updateStartButtonState(rendering) {
+        var startBtn = byId("startPreviewBtn");
+        var iconEl = byId("startBtnIcon");
+        var textEl = byId("startBtnText");
+        if (!startBtn) return;
+
+        if (isStarted) {
+            startBtn.className = "btn-action btn-start started";
+            startBtn.title = t("refreshBtnTitle");
+            if (textEl) {
+                textEl.textContent = t("refreshText");
+            }
+            if (iconEl) {
+                iconEl.textContent = "↻";
+                if (rendering) {
+                    iconEl.className = "btn-icon spinning";
+                } else {
+                    iconEl.className = "btn-icon";
+                }
+            }
+        } else {
+            startBtn.className = "btn-action btn-start";
+            startBtn.title = t("startPreviewBtn");
+            if (textEl) {
+                textEl.textContent = t("startPreviewText");
+            }
+            if (iconEl) {
+                iconEl.textContent = "▶";
+                iconEl.className = "btn-icon";
+            }
+        }
     }
 
     function readNumber(id, fallbackVal, minVal, maxVal) {
@@ -486,6 +569,80 @@
             } catch (e) {}
             if (typeof callback === "function") callback();
         });
+    }
+
+    var inDesignConnected = false;
+    var lastDocStateKey = "";
+
+    function checkAndAutoSyncInDesign(triggerUpdate) {
+        csInterface.evalScript("getDocumentUnitAndSize()", function(res) {
+            if (!res || res === "CEP_NOT_AVAILABLE") {
+                inDesignConnected = false;
+                return;
+            }
+            try {
+                var info = JSON.parse(res);
+                if (info && info.hasDoc) {
+                    var docKey = info.unit + "_" + info.pageW + "_" + info.pageH + "_" + info.w + "_" + info.h;
+                    var wasConnected = inDesignConnected;
+                    inDesignConnected = true;
+
+                    if (!wasConnected || docKey !== lastDocStateKey) {
+                        lastDocStateKey = docKey;
+                        currentUnit = info.unit;
+                        if (byId("unitSelect")) {
+                            byId("unitSelect").value = info.unit;
+                        }
+                        updateUnitLabels(info.unit);
+                        if (usePageMargins) {
+                            if (byId("tableWidthInput")) {
+                                byId("tableWidthInput").value = String(info.w);
+                            }
+                            if (byId("tableHeightInput")) {
+                                byId("tableHeightInput").value = String(info.h);
+                            }
+                            if (byId("tableLeftInput")) {
+                                byId("tableLeftInput").value = String(info.x);
+                            }
+                            if (byId("tableTopInput")) {
+                                byId("tableTopInput").value = String(info.y);
+                            }
+                        }
+                        updatePanelPreview();
+                        if (triggerUpdate) {
+                            scheduleLiveInDesignUpdate();
+                        }
+                    }
+                } else {
+                    inDesignConnected = false;
+                }
+            } catch (e) {}
+        });
+    }
+
+    function initInDesignAutoConnect() {
+        checkAndAutoSyncInDesign(true);
+
+        try {
+            csInterface.addEventListener("documentAfterActivate", function() {
+                usePageMargins = true;
+                checkAndAutoSyncInDesign(true);
+            });
+            csInterface.addEventListener("documentAfterOpen", function() {
+                usePageMargins = true;
+                checkAndAutoSyncInDesign(true);
+            });
+            csInterface.addEventListener("documentAfterNew", function() {
+                usePageMargins = true;
+                checkAndAutoSyncInDesign(true);
+            });
+        } catch (eCepEvents) {}
+
+        try {
+            setInterval(function() {
+                checkAndAutoSyncInDesign(true);
+            }, 2500);
+        } catch (eTimer) {}
     }
 
     function stepProgressInterpolation() {
@@ -695,6 +852,7 @@
 
     function updatePanelPreview() {
         syncSwatchButtons();
+        updateScopeUI();
         var livePreviewText = byId("livePreviewText");
         var livePreviewGrid = byId("livePreviewGrid");
         var holidaySummaryBox = byId("holidaySummaryBox");
@@ -836,6 +994,7 @@
 
         csInterface.evalScript(scriptCall, function(result) {
             isRendering = false;
+            updateStartButtonState(false);
             finishLoadingProgress();
 
             if (usePageMargins) {
@@ -877,6 +1036,7 @@
             return;
         }
         isRendering = true;
+        updateStartButtonState(true);
 
         var cfg = getFormConfig(mode);
         var jsonPayload = JSON.stringify(cfg);
@@ -1530,17 +1690,21 @@
             var startBtn = byId("startPreviewBtn");
             if (startBtn) {
                 startBtn.addEventListener("click", function() {
+                    isStarted = true;
+                    updateStartButtonState(true);
+
                     if (liveRenderTimer) {
                         clearTimeout(liveRenderTimer);
                         liveRenderTimer = null;
                     }
                     var liveChk = byId("inDesignLivePreview");
                     var toggleBtn = byId("toggleLivePreviewBtn");
+                    var liveText = byId("liveBtnText");
                     if (liveChk && !liveChk.checked) {
                         liveChk.checked = true;
                         if (toggleBtn) {
-                            toggleBtn.className = "btn-live-toggle active";
-                            toggleBtn.textContent = t("liveActiveBtn");
+                            toggleBtn.className = "btn-action btn-live active";
+                            if (liveText) liveText.textContent = t("livePreviewShort");
                         }
                     }
                     var modeEl = byId("previewModeSelect");
@@ -1558,23 +1722,77 @@
 
             var toggleBtn = byId("toggleLivePreviewBtn");
             var liveChk = byId("inDesignLivePreview");
+            var liveText = byId("liveBtnText");
             if (toggleBtn && liveChk) {
                 toggleBtn.addEventListener("click", function() {
                     liveChk.checked = !liveChk.checked;
                     if (liveChk.checked) {
-                        toggleBtn.className = "btn-live-toggle active";
-                        toggleBtn.textContent = t("liveActiveBtn");
+                        toggleBtn.className = "btn-action btn-live active";
+                        if (liveText) liveText.textContent = t("livePreviewShort");
                         scheduleLiveInDesignUpdate();
                     } else {
                         if (liveRenderTimer) {
                             clearTimeout(liveRenderTimer);
                         }
-                        toggleBtn.className = "btn-live-toggle inactive";
-                        toggleBtn.textContent = t("liveInactiveBtn");
+                        toggleBtn.className = "btn-action btn-live inactive";
+                        if (liveText) liveText.textContent = t("livePreviewShort");
                         if (byId("loadingContainer")) {
                             byId("loadingContainer").className = "loading-container hidden";
                         }
                     }
+                });
+            }
+
+            var genCalBtn = byId("generateCalendarBtn");
+            if (genCalBtn) {
+                genCalBtn.addEventListener("click", function() {
+                    var modeEl = byId("previewModeSelect");
+                    var chosenMode = modeEl ? modeEl.value : "all";
+                    updatePanelPreview();
+                    executeInDesignGeneration(chosenMode, false);
+                });
+            }
+
+            var resetBtn = byId("resetDocBtn");
+            if (resetBtn) {
+                resetBtn.addEventListener("click", function() {
+                    if (liveRenderTimer) {
+                        clearTimeout(liveRenderTimer);
+                        liveRenderTimer = null;
+                    }
+                    var statusMsg = byId("statusMsg");
+                    if (statusMsg) {
+                        statusMsg.className = "status-msg";
+                        statusMsg.textContent = t("statusCleaningDoc");
+                    }
+                    showLoadingProgress(50, t("statusCleaningDoc"));
+
+                    csInterface.evalScript("resetToCleanDocument()", function(result) {
+                        finishLoadingProgress();
+                        isStarted = false;
+                        updateStartButtonState(false);
+                        if (statusMsg) {
+                            if (result && result.indexOf("CLEAN_OK") === 0) {
+                                statusMsg.className = "status-msg success";
+                                statusMsg.textContent = t("statusDocCleaned");
+                            } else if (result === "CEP_NOT_AVAILABLE") {
+                                statusMsg.className = "status-msg error";
+                                statusMsg.textContent = t("statusNoHost");
+                            } else {
+                                statusMsg.className = "status-msg error";
+                                statusMsg.textContent = t("statusErrorPrefix") + (result || t("statusUnknownError"));
+                            }
+                        }
+                    });
+                });
+            }
+
+            var previewModeSelect = byId("previewModeSelect");
+            if (previewModeSelect) {
+                previewModeSelect.addEventListener("change", function() {
+                    updateScopeUI();
+                    updatePanelPreview();
+                    scheduleLiveInDesignUpdate();
                 });
             }
 
@@ -1607,7 +1825,7 @@
             var inputs = document.querySelectorAll("input, select");
             for (var i = 0; i < inputs.length; i++) {
                 var inp = inputs[i];
-                if (inp.id === "unitSelect" || inp.id === "inDesignLivePreview" || inp.type === "hidden") {
+                if (inp.id === "unitSelect" || inp.id === "inDesignLivePreview" || inp.id === "previewModeSelect" || inp.type === "hidden") {
                     continue;
                 }
                 if (dimInputIds[inp.id]) {
@@ -1625,26 +1843,32 @@
                 }
             }
 
-            byId("generateAllBtn").addEventListener("click", function() {
-                if (byId("previewModeSelect")) {
-                    byId("previewModeSelect").value = "all";
-                }
-                updatePanelPreview();
-                executeInDesignGeneration("all", false);
-            });
+            var genAll = byId("generateAllBtn");
+            if (genAll) {
+                genAll.addEventListener("click", function() {
+                    if (byId("previewModeSelect")) byId("previewModeSelect").value = "all";
+                    updateScopeUI();
+                    updatePanelPreview();
+                    executeInDesignGeneration("all", false);
+                });
+            }
 
-            byId("generateSingleBtn").addEventListener("click", function() {
-                if (byId("previewModeSelect")) {
-                    byId("previewModeSelect").value = "single";
-                }
-                updatePanelPreview();
-                executeInDesignGeneration("single", false);
-            });
+            var genSingle = byId("generateSingleBtn");
+            if (genSingle) {
+                genSingle.addEventListener("click", function() {
+                    if (byId("previewModeSelect")) byId("previewModeSelect").value = "single";
+                    updateScopeUI();
+                    updatePanelPreview();
+                    executeInDesignGeneration("single", false);
+                });
+            }
 
             isInitialized = true;
-            try { syncFromInDesignDocument(false); } catch (eSync) {}
+            try { initInDesignAutoConnect(); } catch (eAuto) {}
             try { loadInstalledFontsFromHost(); } catch (eFonts) {}
         }
+        updateScopeUI();
+        updateStartButtonState(isRendering);
         updatePanelPreview();
     }
 

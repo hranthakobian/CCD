@@ -919,6 +919,18 @@ function findExistingSkeletonFrameOnPage(page) {
     return null;
 }
 
+function clearPageSkeletonFrames(page) {
+    if (!page || !page.isValid) return;
+    try {
+        for (var i = page.textFrames.length - 1; i >= 0; i--) {
+            var tf = page.textFrames.item(i);
+            if (tf && tf.isValid && tf.label === "CALENDAR_SKELETON_FRAME") {
+                tf.remove();
+            }
+        }
+    } catch (e) {}
+}
+
 function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
     var ctx = getInDesignContext();
     if (!ctx || !ctx.app) {
@@ -936,9 +948,6 @@ function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
         }
 
         var calLayer = getOrCreateCalendarLayer(doc);
-        var activePage = (hostApp.activeWindow && hostApp.activeWindow.activePage)
-            ? hostApp.activeWindow.activePage
-            : doc.pages.item(0);
 
         var sh1 = getOrCreateHexColor(doc, ctx, "#D8E2EE");
         var sh2 = getOrCreateHexColor(doc, ctx, "#E5EDF7");
@@ -948,102 +957,135 @@ function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
         var shimmerPalette = [sh1, sh2, sh3, sh4, sh5];
         var stepOffset = parseInt(shimmerStep, 10) || 0;
 
+        var isAllMode = (cfg.mode === "all");
         var showTitle = (cfg.showTitle !== false);
         var showWeekdays = (cfg.showWeekdays !== false);
         var showFooter = (cfg.enableHolidays !== false) && (cfg.showFooterCaption !== false);
         var skelYear = parseInt(cfg.year, 10) || 2026;
-        var skelMonth = parseInt(cfg.month, 10);
-        if (isNaN(skelMonth) || skelMonth < 0 || skelMonth > 11) skelMonth = 0;
         var skelIsMon = (cfg.startDay === "mon");
-        var skelFirstDay = new Date(skelYear, skelMonth, 1).getDay();
-        var skelOffset = skelIsMon ? ((skelFirstDay + 6) % 7) : skelFirstDay;
-        var skelDaysInMonth = getDaysInMonth(skelYear, skelMonth);
         var forceSixRows = Boolean(cfg.forceSixRows);
-        var weekRows = Math.ceil((skelOffset + skelDaysInMonth) / 7);
-        if (forceSixRows) {
-            weekRows = 6;
-        } else if (isNaN(weekRows) || weekRows < 5) {
-            weekRows = 5;
-        }
-        var totalRows = weekRows + (showTitle ? 1 : 0) + (showWeekdays ? 1 : 0) + (showFooter ? 1 : 0);
 
-        var frameBox = resolvePageFrameBox(doc, activePage, unitSuffix, ctx, cfg);
-        var frameTop = frameBox.top;
-        var frameLeft = frameBox.left;
-        var frameWidth = frameBox.width;
-        var frameHeight = frameBox.height;
-
-        var textFrame = (stepOffset > 0) ? findExistingSkeletonFrameOnPage(activePage) : null;
-        var table = null;
-
-        if (textFrame && textFrame.tables && textFrame.tables.length > 0) {
-            table = textFrame.tables.item(0);
-            if (table.rows.length !== totalRows) {
-                textFrame = null;
-                table = null;
+        var targetPages = [];
+        if (isAllMode) {
+            while (doc.pages.length < 12) {
+                doc.pages.add();
+            }
+            for (var p = 0; p < 12; p++) {
+                targetPages.push({ page: doc.pages.item(p), month: p });
             }
         } else {
-            textFrame = null;
-        }
+            var activePage = (hostApp.activeWindow && hostApp.activeWindow.activePage)
+                ? hostApp.activeWindow.activePage
+                : doc.pages.item(0);
+            var singleM = parseInt(cfg.month, 10);
+            if (isNaN(singleM) || singleM < 0 || singleM > 11) singleM = 0;
+            targetPages.push({ page: activePage, month: singleM });
 
-        if (!textFrame || !table) {
-            clearPageCalendarFrames(activePage);
-
-            textFrame = activePage.textFrames.add();
-            try {
-                textFrame.itemLayer = calLayer;
-            } catch (eL) {}
-            try {
-                textFrame.label = "CALENDAR_SKELETON_FRAME";
-            } catch (eLb) {}
-
-            textFrame.geometricBounds = [
-                frameTop + unitSuffix,
-                frameLeft + unitSuffix,
-                (frameTop + frameHeight) + unitSuffix,
-                (frameLeft + frameWidth) + unitSuffix
-            ];
-
-            table = textFrame.insertionPoints.item(0).tables.add({
-                bodyRowCount: totalRows,
-                columnCount: 7
-            });
-
-            var colWidthVal = Math.floor(((frameWidth * 0.985) / 7) * 100) / 100;
-            for (var colW = 0; colW < 7; colW++) {
-                table.columns.item(colW).width = colWidthVal + unitSuffix;
-            }
-
-            var rowH = Math.floor(((frameHeight * 0.97) / totalRows) * 100) / 100;
-            for (var rInit = 0; rInit < totalRows; rInit++) {
-                var rObj = table.rows.item(rInit);
-                try {
-                    rObj.autoGrow = false;
-                } catch (eAg) {}
-                rObj.height = rowH + unitSuffix;
-            }
-
-            if (showTitle) {
-                try {
-                    table.rows.item(0).cells.item(0).merge(table.rows.item(0).cells.item(6));
-                } catch (eMt) {}
-            }
-            if (showFooter) {
-                try {
-                    var lastR = totalRows - 1;
-                    table.rows.item(lastR).cells.item(0).merge(table.rows.item(lastR).cells.item(6));
-                } catch (eMf) {}
+            if (stepOffset === 0) {
+                for (var op = 0; op < doc.pages.length; op++) {
+                    var otherP = doc.pages.item(op);
+                    if (otherP !== activePage) {
+                        clearPageSkeletonFrames(otherP);
+                    }
+                }
             }
         }
 
-        var rowCount = table.rows.length;
-        for (var rIdx = 0; rIdx < rowCount; rIdx++) {
-            var rowObj = table.rows.item(rIdx);
-            var cellCount = rowObj.cells.length;
-            for (var cIdx = 0; cIdx < cellCount; cIdx++) {
-                var cell = rowObj.cells.item(cIdx);
-                var waveIdx = (rIdx + cIdx + stepOffset * 2) % shimmerPalette.length;
-                cell.fillColor = shimmerPalette[waveIdx];
+        for (var tIdx = 0; tIdx < targetPages.length; tIdx++) {
+            var item = targetPages[tIdx];
+            var curPage = item.page;
+            var curMonth = item.month;
+
+            var skelFirstDay = new Date(skelYear, curMonth, 1).getDay();
+            var skelOffset = skelIsMon ? ((skelFirstDay + 6) % 7) : skelFirstDay;
+            var skelDaysInMonth = getDaysInMonth(skelYear, curMonth);
+            var weekRows = Math.ceil((skelOffset + skelDaysInMonth) / 7);
+            if (forceSixRows) {
+                weekRows = 6;
+            } else if (isNaN(weekRows) || weekRows < 5) {
+                weekRows = 5;
+            }
+            var totalRows = weekRows + (showTitle ? 1 : 0) + (showWeekdays ? 1 : 0) + (showFooter ? 1 : 0);
+
+            var frameBox = resolvePageFrameBox(doc, curPage, unitSuffix, ctx, cfg);
+            var frameTop = frameBox.top;
+            var frameLeft = frameBox.left;
+            var frameWidth = frameBox.width;
+            var frameHeight = frameBox.height;
+
+            var textFrame = (stepOffset > 0) ? findExistingSkeletonFrameOnPage(curPage) : null;
+            var table = null;
+
+            if (textFrame && textFrame.tables && textFrame.tables.length > 0) {
+                table = textFrame.tables.item(0);
+                if (table.rows.length !== totalRows) {
+                    textFrame = null;
+                    table = null;
+                }
+            } else {
+                textFrame = null;
+            }
+
+            if (!textFrame || !table) {
+                clearPageCalendarFrames(curPage);
+
+                textFrame = curPage.textFrames.add();
+                try {
+                    textFrame.itemLayer = calLayer;
+                } catch (eL) {}
+                try {
+                    textFrame.label = "CALENDAR_SKELETON_FRAME";
+                } catch (eLb) {}
+
+                textFrame.geometricBounds = [
+                    frameTop + unitSuffix,
+                    frameLeft + unitSuffix,
+                    (frameTop + frameHeight) + unitSuffix,
+                    (frameLeft + frameWidth) + unitSuffix
+                ];
+
+                table = textFrame.insertionPoints.item(0).tables.add({
+                    bodyRowCount: totalRows,
+                    columnCount: 7
+                });
+
+                var colWidthVal = Math.floor(((frameWidth * 0.985) / 7) * 100) / 100;
+                for (var colW = 0; colW < 7; colW++) {
+                    table.columns.item(colW).width = colWidthVal + unitSuffix;
+                }
+
+                var rowH = Math.floor(((frameHeight * 0.97) / totalRows) * 100) / 100;
+                for (var rInit = 0; rInit < totalRows; rInit++) {
+                    var rObj = table.rows.item(rInit);
+                    try {
+                        rObj.autoGrow = false;
+                    } catch (eAg) {}
+                    rObj.height = rowH + unitSuffix;
+                }
+
+                if (showTitle) {
+                    try {
+                        table.rows.item(0).cells.item(0).merge(table.rows.item(0).cells.item(6));
+                    } catch (eMt) {}
+                }
+                if (showFooter) {
+                    try {
+                        var lastR = totalRows - 1;
+                        table.rows.item(lastR).cells.item(0).merge(table.rows.item(lastR).cells.item(6));
+                    } catch (eMf) {}
+                }
+            }
+
+            // Wave color assignment: SYNCHRONIZED ACROSS ALL PAGES SIMULTANEOUSLY
+            var rowCount = table.rows.length;
+            for (var rIdx = 0; rIdx < rowCount; rIdx++) {
+                var rowObj = table.rows.item(rIdx);
+                var cellCount = rowObj.cells.length;
+                for (var cIdx = 0; cIdx < cellCount; cIdx++) {
+                    var cell = rowObj.cells.item(cIdx);
+                    var waveIdx = (rIdx + cIdx + stepOffset * 2) % shimmerPalette.length;
+                    cell.fillColor = shimmerPalette[waveIdx];
+                }
             }
         }
 
@@ -1515,11 +1557,29 @@ function generateCalendarFromConfig(configInput) {
             } catch (eRedrawOn1) {}
             return "SUCCESS:12";
         } else {
-            var activePage = (hostApp.activeWindow && hostApp.activeWindow.activePage)
+            clearDocumentCalendarFrames(doc, calLayer);
+            var firstPage = (hostApp.activeWindow && hostApp.activeWindow.activePage)
                 ? hostApp.activeWindow.activePage
                 : doc.pages.item(0);
-            clearPageCalendarFrames(activePage);
-            buildMonthTableOnPage(doc, hostApp, ctx, activePage, calLayer, cfg, cfg.month, yearHolidays, colors, fonts);
+
+            var singleMonthIndex = parseInt(cfg.month, 10);
+            if (isNaN(singleMonthIndex) || singleMonthIndex < 0 || singleMonthIndex > 11) {
+                singleMonthIndex = 0;
+            }
+
+            buildMonthTableOnPage(doc, hostApp, ctx, firstPage, calLayer, cfg, singleMonthIndex, yearHolidays, colors, fonts);
+
+            try {
+                while (doc.pages.length > 1) {
+                    var lastP = doc.pages.item(doc.pages.length - 1);
+                    if (lastP !== firstPage && lastP.pageItems.length === 0) {
+                        lastP.remove();
+                    } else {
+                        break;
+                    }
+                }
+            } catch (eCleanPages) {}
+
             try {
                 if (hostApp.scriptPreferences) {
                     hostApp.scriptPreferences.enableRedraw = true;
@@ -1535,6 +1595,43 @@ function generateCalendarFromConfig(configInput) {
         } catch (eRedrawErr) {}
         return "ERROR: " + err.message;
     }
+}
+
+function resetToCleanDocument() {
+    var ctx = getInDesignContext();
+    if (!ctx || !ctx.app || ctx.app.documents.length === 0) {
+        return "ERROR: No document available";
+    }
+    var hostApp = ctx.app;
+    var doc = hostApp.activeDocument;
+    var calLayer = doc.layers.itemByName("Calendar_Generator");
+
+    try {
+        if (hostApp.scriptPreferences) {
+            hostApp.scriptPreferences.enableRedraw = false;
+        }
+    } catch (e1) {}
+
+    clearDocumentCalendarFrames(doc, calLayer);
+
+    try {
+        while (doc.pages.length > 1) {
+            var lastP = doc.pages.item(doc.pages.length - 1);
+            if (lastP.pageItems.length === 0) {
+                lastP.remove();
+            } else {
+                break;
+            }
+        }
+    } catch (e2) {}
+
+    try {
+        if (hostApp.scriptPreferences) {
+            hostApp.scriptPreferences.enableRedraw = true;
+        }
+    } catch (e3) {}
+
+    return "CLEAN_OK";
 }
 
 function generateCalendar(year, monthIndex, lang, startDay, showPadding) {
@@ -1596,6 +1693,7 @@ if (typeof window !== "undefined") {
     window.generateCalendar = generateCalendar;
     window.generateCalendarFromConfig = generateCalendarFromConfig;
     window.renderSkeletonShimmerInDesign = renderSkeletonShimmerInDesign;
+    window.resetToCleanDocument = resetToCleanDocument;
     window.getYearHolidays = getYearHolidays;
     window.getDocumentUnitAndSize = getDocumentUnitAndSize;
     window.getHostThemeInfo = getHostThemeInfo;

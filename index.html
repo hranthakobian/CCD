@@ -7,73 +7,79 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="dark">
-    <div class="panel-scroll-wrapper">
-        <div class="panel-container">
-            <header class="panel-header">
-                <div class="header-left">
-                    <h1 class="panel-title" data-i18n="panelTitle">Օրացույցի Ստեղծիչ</h1>
-                    <span id="panelSubtitle" class="panel-subtitle" data-i18n="subtitle">12 Ամիս եւ Shimmer</span>
-                </div>
-                <div class="header-right">
-                    <div role="button" tabindex="0" id="checkUpdateBtn" class="btn-update-check" title="Ստուգել թարմացումները GitHub-ում">
-                        <span id="pluginVersionLabel">v1.1.0</span> ↻
+    <div class="panel-root">
+        <div class="panel-scroll-wrapper">
+            <div class="panel-container">
+                <header class="panel-header">
+                    <div class="header-left">
+                        <h1 class="panel-title" data-i18n="panelTitle">Օրացույցի Ստեղծիչ</h1>
+                        <span id="panelSubtitle" class="panel-subtitle" data-i18n="subtitle">12 Ամիս եւ Shimmer</span>
                     </div>
-                    <div class="lang-switch-group" role="group" aria-label="UI Language">
-                        <div role="button" tabindex="0" id="uiLangHyBtn" class="lang-btn active" data-ui-lang="hy">ՀԱՅ</div>
-                        <div role="button" tabindex="0" id="uiLangEnBtn" class="lang-btn" data-ui-lang="en">ENG</div>
+                    <div class="header-right">
+                        <div role="button" tabindex="0" id="checkUpdateBtn" class="btn-update-check" title="Ստուգել թարմացումները GitHub-ում">
+                            <span id="pluginVersionLabel">v1.2.0</span> ↻
+                        </div>
+                        <div class="lang-switch-group" role="group" aria-label="UI Language">
+                            <div role="button" tabindex="0" id="uiLangHyBtn" class="lang-btn active" data-ui-lang="hy">ՀԱՅ</div>
+                            <div role="button" tabindex="0" id="uiLangEnBtn" class="lang-btn" data-ui-lang="en">ENG</div>
+                        </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
-            <!-- GitHub Releases Update Notification Card -->
-            <div id="updateBanner" class="update-banner hidden">
-                <div class="update-banner-top">
-                    <span id="updateBannerTitle" class="update-banner-title">Հասանելի է նոր թարմացում</span>
-                    <div role="button" tabindex="0" id="dismissUpdateBtn" class="update-dismiss-btn" title="Փակել">×</div>
-                </div>
-                <div id="updateBannerNotes" class="update-banner-notes"></div>
-                <div id="updateActionRow" class="update-action-row">
-                    <div role="button" tabindex="0" id="installUpdateBtn" class="btn-update-install" data-i18n="updateNowBtn">Թարմացնել հիմա</div>
-                    <div role="button" tabindex="0" id="openReleaseUrlBtn" class="btn-update-link" data-i18n="openGithubBtn">Բացել GitHub-ում</div>
-                </div>
-            </div>
-
-            <!-- Loading Progress Bar -->
-            <div id="loadingContainer" class="loading-container hidden">
-                <div class="loading-header">
-                    <span id="loadingText" data-i18n="loadingUpdating">Թարմացվում է InDesign-ում...</span>
-                    <span id="loadingPercent">0%</span>
-                </div>
-                <div class="loading-bar-bg">
-                    <div id="loadingBarFill" class="loading-bar-fill shimmer-active"></div>
-                </div>
-            </div>
-
-            <!-- Live Preview Toggle Button & Scope -->
-            <div class="section-card live-card">
-                <div role="button" tabindex="0" id="startPreviewBtn" class="btn-start-preview" data-i18n="startPreviewBtn">▶ Սկսել</div>
-                <div role="button" tabindex="0" id="toggleLivePreviewBtn" class="btn-live-toggle active">
-                    Ուղիղ Նախադիտում՝ ՄԻԱՑՎԱԾ Է (Անջատել)
-                </div>
-                <input type="checkbox" id="inDesignLivePreview" checked style="display: none;">
-
-                <div class="form-row" style="margin-top: 6px;">
-                    <div class="form-group">
-                        <label for="previewModeSelect" data-i18n="previewScopeLabel">Նախադիտման եւ ստեղծման ծավալ</label>
-                        <select id="previewModeSelect" class="form-control">
-                            <option value="all" data-i18n="scopeAll12" selected>Բոլոր 12 ամիսները (12 էջ)</option>
-                            <option value="single" data-i18n="scopeSingle1">Միայն ընտրված ամիսը (1 էջ)</option>
-                        </select>
+                <!-- GitHub Releases Update Notification Card -->
+                <div id="updateBanner" class="update-banner hidden">
+                    <div class="update-banner-top">
+                        <span id="updateBannerTitle" class="update-banner-title">Հասանելի է նոր թարմացում</span>
+                        <div role="button" tabindex="0" id="dismissUpdateBtn" class="update-dismiss-btn" title="Փակել">×</div>
+                    </div>
+                    <div id="updateBannerNotes" class="update-banner-notes"></div>
+                    <div id="updateActionRow" class="update-action-row">
+                        <div role="button" tabindex="0" id="installUpdateBtn" class="btn-update-install" data-i18n="updateNowBtn">Թարմացնել հիմա</div>
+                        <div role="button" tabindex="0" id="openReleaseUrlBtn" class="btn-update-link" data-i18n="openGithubBtn">Բացել GitHub-ում</div>
                     </div>
                 </div>
 
-                <div class="checkbox-row" data-check="enableSkeletonCheckbox">
-                    <input type="checkbox" id="enableSkeletonCheckbox" checked>
-                    <div class="checkbox-text" data-i18n="skeletonToggleLabel">Սկելետոն շիմեր անիմացիա InDesign-ի էջերում</div>
+                <!-- Loading Progress Bar -->
+                <div id="loadingContainer" class="loading-container hidden">
+                    <div class="loading-header">
+                        <span id="loadingText" data-i18n="loadingUpdating">Թարմացվում է InDesign-ում...</span>
+                        <span id="loadingPercent">0%</span>
+                    </div>
+                    <div class="loading-bar-bg">
+                        <div id="loadingBarFill" class="loading-bar-fill shimmer-active"></div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 1. General Settings, Languages, Headers, Captions & Holidays -->
+                <!-- 1. Panel Mini Preview & Holiday Summary AT THE VERY TOP (Requirement 1) -->
+                <div class="preview-section" id="topPreviewSection">
+                    <div class="preview-header-row">
+                        <div class="preview-label" data-i18n="sec5PreviewTitle">Նախադիտում եւ Տոների Ցանկ</div>
+                        <span id="previewScopeBadge" class="preview-scope-badge">12 էջ</span>
+                    </div>
+                    <div id="livePreviewText" class="preview-status-text"></div>
+                    <div id="livePreviewGrid" class="preview-grid"></div>
+                    <div id="holidaySummaryBox" class="holiday-summary-box"></div>
+                </div>
+
+                <!-- Scope & Skeleton Controls Card -->
+                <div class="section-card scope-card">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="previewModeSelect" data-i18n="previewScopeLabel">Նախադիտման եւ ստեղծման ծավալ</label>
+                            <select id="previewModeSelect" class="form-control">
+                                <option value="all" data-i18n="scopeAll12" selected>Բոլոր 12 ամիսները (12 էջ)</option>
+                                <option value="single" data-i18n="scopeSingle1">Միայն ընտրված ամիսը (1 էջ)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-row" data-check="enableSkeletonCheckbox">
+                        <input type="checkbox" id="enableSkeletonCheckbox" checked>
+                        <div class="checkbox-text" data-i18n="skeletonToggleLabel">Սկելետոն շիմեր անիմացիա InDesign-ի էջերում</div>
+                    </div>
+                </div>
+
+                <!-- 1. General Settings, Languages, Headers, Captions & Holidays -->
             <div class="section-card">
                 <div class="section-title" data-i18n="sec1Title">1. Հիմնական, Լեզուներ, Վերնագրեր եւ Տոներ</div>
                 <div class="form-row">
@@ -450,20 +456,45 @@
                 <!-- Quick Swatch Palette Popover -->
                 <div id="swatchPalette" class="swatch-palette hidden"></div>
             </div>
+        </div>
 
-            <!-- 5. Panel Mini Preview & Holiday Summary -->
-            <div class="preview-section">
-                <div class="preview-label" data-i18n="sec5PreviewTitle">Նախադիտում եւ Տոների Ցանկ</div>
-                <div id="livePreviewText" class="preview-status-text"></div>
-                <div id="livePreviewGrid" class="preview-grid"></div>
-                <div id="holidaySummaryBox" class="holiday-summary-box"></div>
+        <!-- FIXED PANEL AT THE BOTTOM (Requirement 2, 3, 4) -->
+        <div class="fixed-bottom-bar" id="fixedBottomBar">
+            <div class="action-btn-row">
+                <!-- Start / Refresh Button (Requirement 2 & 3) -->
+                <div role="button" tabindex="0" id="startPreviewBtn" class="btn-action btn-start" title="Սկսել կամ թարմացնել">
+                    <span id="startBtnIcon" class="btn-icon">▶</span>
+                    <span id="startBtnText">Սկսել</span>
+                </div>
+
+                <!-- Live Preview Toggle Button (Requirement 2) -->
+                <div role="button" tabindex="0" id="toggleLivePreviewBtn" class="btn-action btn-live active" title="Միացնել/Անջատել ուղիղ նախադիտումը">
+                    <span class="live-dot">●</span>
+                    <span id="liveBtnText">Ուղիղ Նախադիտում</span>
+                </div>
+                <input type="checkbox" id="inDesignLivePreview" checked style="display: none;">
             </div>
 
-            <!-- 6. Action Buttons -->
-            <div class="action-buttons">
-                <div role="button" tabindex="0" id="generateAllBtn" class="btn-release btn-all" data-i18n="genAllBtn">Ստեղծել 12 ամիսները (12 էջ)</div>
-                <div role="button" tabindex="0" id="generateSingleBtn" class="btn-release btn-single" data-i18n="genSingleBtn">Ստեղծել միայն ընտրված ամիսը</div>
+            <div class="action-btn-row">
+                <!-- Create Button (Requirement 2 & 6: dynamic based on scope) -->
+                <div role="button" tabindex="0" id="generateCalendarBtn" class="btn-action btn-generate" title="Ստեղծել օրացույցը InDesign-ում">
+                    <span class="btn-icon">★</span>
+                    <span id="generateBtnText">Ստեղծել (12 էջ)</span>
+                </div>
+
+                <!-- Clean Page Button (Requirement 4) -->
+                <div role="button" tabindex="0" id="resetDocBtn" class="btn-action btn-reset" title="Ջնջել ամեն ինչ եւ վերադառնալ մաքուր թղթի">
+                    <span class="btn-icon">↺</span>
+                    <span id="resetBtnText" data-i18n="resetDocBtn">Մաքուր թուղթ</span>
+                </div>
             </div>
+
+            <!-- Legacy IDs for backwards compatibility if needed -->
+            <div style="display: none;">
+                <div id="generateAllBtn"></div>
+                <div id="generateSingleBtn"></div>
+            </div>
+
             <div id="statusMsg" class="status-msg"></div>
         </div>
     </div>
