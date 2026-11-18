@@ -1,5 +1,5 @@
 ﻿/**
- * Calendar Generator Pro - Fast ExtendScript & UXP Backend for Adobe InDesign
+ * Օրացույցի Ստեղծիչ - Fast ExtendScript & UXP Backend for Adobe InDesign
  */
 
 function getInDesignContext() {
@@ -958,8 +958,11 @@ function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
         var skelFirstDay = new Date(skelYear, skelMonth, 1).getDay();
         var skelOffset = skelIsMon ? ((skelFirstDay + 6) % 7) : skelFirstDay;
         var skelDaysInMonth = getDaysInMonth(skelYear, skelMonth);
+        var forceSixRows = Boolean(cfg.forceSixRows);
         var weekRows = Math.ceil((skelOffset + skelDaysInMonth) / 7);
-        if (isNaN(weekRows) || weekRows < 5) {
+        if (forceSixRows) {
+            weekRows = 6;
+        } else if (isNaN(weekRows) || weekRows < 5) {
             weekRows = 5;
         }
         var totalRows = weekRows + (showTitle ? 1 : 0) + (showWeekdays ? 1 : 0) + (showFooter ? 1 : 0);
@@ -1080,8 +1083,11 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
     var daysInCurrentMonth = getDaysInMonth(numYear, mIdx);
     var daysInPrevMonth = getDaysInMonth(numYear, mIdx - 1);
 
+    var forceSixRows = Boolean(cfg.forceSixRows);
     var weekRows = Math.ceil((startOffset + daysInCurrentMonth) / 7);
-    if (isNaN(weekRows) || weekRows < 5) {
+    if (forceSixRows) {
+        weekRows = 6;
+    } else if (isNaN(weekRows) || weekRows < 5) {
         weekRows = 5;
     }
 
@@ -1547,6 +1553,7 @@ function generateCalendar(year, monthIndex, lang, startDay, showPadding) {
         showInCellHoliday: true,
         showFooterCaption: true,
         showPadding: (showPadding === true || showPadding === "true"),
+        forceSixRows: false,
         country: "AM",
         unit: "mm",
         usePageMargins: true,

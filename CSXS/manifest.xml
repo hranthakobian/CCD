@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.calendar.generator" ExtensionBundleVersion="1.0.0" ExtensionBundleName="Calendar Generator" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.calendar.generator" ExtensionBundleVersion="1.0.0" ExtensionBundleName="Օրացույցի Ստեղծիչ" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
         <Extension Id="com.calendar.generator.panel" Version="1.0.0" />
     </ExtensionList>
@@ -30,7 +30,7 @@
                 </Lifecycle>
                 <UI>
                     <Type>Panel</Type>
-                    <Menu>Calendar Generator</Menu>
+                    <Menu>Օրացույցի Ստեղծիչ</Menu>
                     <Geometry>
                         <Size>
                             <Height>540</Height>

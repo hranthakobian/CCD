@@ -1,8 +1,9 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableDelayedExpansion
 
 echo ========================================================
-echo   Calendar Generator - InDesign CEP and UXP Installer
+echo   Օրացույցի Ստեղծիչ - InDesign CEP and UXP Installer
 echo ========================================================
 echo.
 
@@ -59,7 +60,7 @@ echo.
 echo ========================================================
 echo   Installation Complete
 echo   Restart Adobe InDesign and open:
-echo   Plug-Ins ^> Calendar Generator (or Plug-Ins ^> Plugins Panel)
+echo   Plug-Ins ^> Օրացույցի Ստեղծիչ (or Plug-Ins ^> Plugins Panel)
 echo ========================================================
 echo.
 pause

@@ -1,6 +1,6 @@
 {
   "id": "com.calendar.generator",
-  "name": "Calendar Generator",
+  "name": "Օրացույցի Ստեղծիչ",
   "version": "1.0.0",
   "main": "index.html",
   "manifestVersion": 5,
@@ -60,7 +60,7 @@
       "type": "panel",
       "id": "calendarGeneratorPanel",
       "label": {
-        "default": "Calendar Generator"
+        "default": "Օրացույցի Ստեղծիչ"
       },
       "icons": [
         {
@@ -97,7 +97,7 @@
       "type": "command",
       "id": "generateCalendarNow",
       "label": {
-        "default": "Generate Calendar (2026)"
+        "default": "Օրացույցի Ստեղծիչ (2026)"
       }
     }
   ]

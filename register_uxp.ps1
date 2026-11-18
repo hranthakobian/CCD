@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $infoPath = Join-Path $env:APPDATA "Adobe\UXP\PluginsInfo\v1\ID.json"
 $extPath = Join-Path $env:APPDATA "Adobe\UXP\Plugins\External\com.calendar.generator"
@@ -30,7 +30,7 @@ $newEntry = [PSCustomObject]@{
     type           = "UXP"
     hostMinVersion = "18.5.0"
     pluginId       = "com.calendar.generator"
-    name           = "Calendar Generator"
+    name           = "Օրացույցի Ստեղծիչ"
     versionId      = "00000000-0000-0000-0000-000000000002"
     versionUuid    = "00000000-0000-0000-0000-000000000002"
     path           = $extPath

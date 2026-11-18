@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendar Generator</title>
+    <title>Օրացույցի Ստեղծիչ</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="dark">
@@ -11,7 +11,7 @@
         <div class="panel-container">
             <header class="panel-header">
                 <div class="header-left">
-                    <h1 class="panel-title">Calendar Generator Pro</h1>
+                    <h1 class="panel-title" data-i18n="panelTitle">Օրացույցի Ստեղծիչ</h1>
                     <span id="panelSubtitle" class="panel-subtitle" data-i18n="subtitle">12 Ամիս եւ Shimmer</span>
                 </div>
                 <div class="header-right">
@@ -141,6 +141,11 @@
                 <div class="checkbox-row" data-check="paddingCheckbox">
                     <input type="checkbox" id="paddingCheckbox" checked>
                     <div class="checkbox-text" data-i18n="showPaddingLabel">Ցուցադրել նախորդ/հաջորդ ամիսների թվերը</div>
+                </div>
+
+                <div class="checkbox-row" data-check="forceSixRowsCheckbox">
+                    <input type="checkbox" id="forceSixRowsCheckbox">
+                    <div class="checkbox-text" data-i18n="forceSixRowsLabel">Բոլոր ամիսները դարձնել 6 տողանի</div>
                 </div>
 
                 <!-- Holidays & Captions Toggles -->

@@ -26,6 +26,7 @@
 
     var UI_TRANSLATIONS = {
         hy: {
+            panelTitle: "Օրացույցի Ստեղծիչ",
             subtitle: "12 Ամիս եւ Shimmer",
             checkUpdateTitle: "Ստուգել թարմացումները GitHub-ում",
             updateAvailableTitle: "Հասանելի է նոր տարբերակ՝ ",
@@ -82,6 +83,7 @@
             showTitleLabel: "Ցուցադրել ամսվա եւ տարվա վերնագիրը",
             showWeekdaysLabel: "Ցուցադրել շաբաթվա օրերի վերնագրի տողը",
             showPaddingLabel: "Ցուցադրել նախորդ/հաջորդ ամիսների թվերը",
+            forceSixRowsLabel: "Բոլոր ամիսները դարձնել 6 տողանի",
             enableHolidaysLabel: "Միացնել տոները (Անշարժ եւ շարժական)",
             countryLabel: "Երկիր (Տոների բազա)",
             country_AM: "Հայաստան (Պետական + Եկեղեցական շարժական)",
@@ -155,6 +157,7 @@
             statusCreatingCal: "Ստեղծվում է օրացույցը InDesign-ում..."
         },
         en: {
+            panelTitle: "Օրացույցի Ստեղծիչ",
             subtitle: "12 Months & Shimmer",
             checkUpdateTitle: "Check for updates on GitHub",
             updateAvailableTitle: "New version available: ",
@@ -211,6 +214,7 @@
             showTitleLabel: "Show Month & Year Title Row",
             showWeekdaysLabel: "Show Weekday Names Header Row",
             showPaddingLabel: "Show Prev/Next Month Padding Days",
+            forceSixRowsLabel: "Make all months 6 rows",
             enableHolidaysLabel: "Enable Holidays (Fixed & Movable)",
             countryLabel: "Country (Holiday Database)",
             country_AM: "Armenia (State + Church Movable)",
@@ -586,6 +590,7 @@
             showInCellHoliday: byId("showInCellHolidayCheckbox") ? Boolean(byId("showInCellHolidayCheckbox").checked) : true,
             showFooterCaption: byId("showFooterCaptionCheckbox") ? Boolean(byId("showFooterCaptionCheckbox").checked) : true,
             showPadding: byId("paddingCheckbox") ? Boolean(byId("paddingCheckbox").checked) : true,
+            forceSixRows: byId("forceSixRowsCheckbox") ? Boolean(byId("forceSixRowsCheckbox").checked) : false,
             unit: byId("unitSelect") ? byId("unitSelect").value : "mm",
             usePageMargins: Boolean(usePageMargins),
             tableWidth: readNumber("tableWidthInput", 184.6, 5, 5000),
@@ -645,7 +650,7 @@
         return days[m];
     }
 
-    function getCalendarMatrix(year, month, startDay) {
+    function getCalendarMatrix(year, month, startDay, forceSixRows) {
         var firstDayOfMonth = new Date(year, month, 1).getDay();
         var daysInCurrentMonth = getDaysInMonthSafe(year, month);
         var daysInPrevMonth = getDaysInMonthSafe(year, month - 1);
@@ -653,7 +658,9 @@
         var startOffset = (startDay === "mon") ? ((firstDayOfMonth + 6) % 7) : firstDayOfMonth;
         var totalSlotsNeeded = startOffset + daysInCurrentMonth;
         var weekRows = Math.ceil(totalSlotsNeeded / 7);
-        if (weekRows < 5) {
+        if (forceSixRows) {
+            weekRows = 6;
+        } else if (weekRows < 5) {
             weekRows = 5;
         }
         var totalCells = weekRows * 7;
@@ -735,7 +742,7 @@
             }
         }
 
-        var matrix = getCalendarMatrix(cfg.year, cfg.month, cfg.startDay);
+        var matrix = getCalendarMatrix(cfg.year, cfg.month, cfg.startDay, cfg.forceSixRows);
         var isMon = (cfg.startDay === "mon");
         var flexAlignH = cfg.cellAlignH === "LEFT" ? "flex-start" : (cfg.cellAlignH === "RIGHT" ? "flex-end" : "center");
         var flexAlignV = cfg.cellAlignV === "TOP" ? "flex-start" : (cfg.cellAlignV === "BOTTOM" ? "flex-end" : "center");
