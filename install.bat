@@ -27,9 +27,9 @@ mkdir "%CEP_TARGET%\CSXS" "%CEP_TARGET%\css" "%CEP_TARGET%\js\libs" "%CEP_TARGET
 copy /y "%SOURCE_DIR%index.html" "%CEP_TARGET%\index.html" >nul
 copy /y "%SOURCE_DIR%manifest.json" "%CEP_TARGET%\manifest.json" >nul
 copy /y "%SOURCE_DIR%CSXS\manifest.xml" "%CEP_TARGET%\CSXS\manifest.xml" >nul
-copy /y "%SOURCE_DIR%css\style.css" "%CEP_TARGET%\css\style.css" >nul
+xcopy /s /e /y "%SOURCE_DIR%css" "%CEP_TARGET%\css\" >nul 2>&1
 copy /y "%SOURCE_DIR%js\main.js" "%CEP_TARGET%\js\main.js" >nul
-copy /y "%SOURCE_DIR%js\libs\CSInterface.js" "%CEP_TARGET%\js\libs\CSInterface.js" >nul
+xcopy /s /e /y "%SOURCE_DIR%js\libs" "%CEP_TARGET%\js\libs\" >nul 2>&1
 copy /y "%SOURCE_DIR%jsx\hostscript.jsx" "%CEP_TARGET%\jsx\hostscript.jsx" >nul
 copy /y "%SOURCE_DIR%icons\icon.svg" "%CEP_TARGET%\icons\icon.svg" >nul
 echo       Target: "%CEP_TARGET%"
@@ -42,9 +42,9 @@ for %%D in ("%UXP_EXTERNAL%" "%UXP_EXT%") do (
     mkdir "%%~D\css" "%%~D\js\libs" "%%~D\jsx" "%%~D\icons" >nul 2>&1
     copy /y "%SOURCE_DIR%index.html" "%%~D\index.html" >nul
     copy /y "%SOURCE_DIR%manifest.json" "%%~D\manifest.json" >nul
-    copy /y "%SOURCE_DIR%css\style.css" "%%~D\css\style.css" >nul
+    xcopy /s /e /y "%SOURCE_DIR%css" "%%~D\css\" >nul 2>&1
     copy /y "%SOURCE_DIR%js\main.js" "%%~D\js\main.js" >nul
-    copy /y "%SOURCE_DIR%js\libs\CSInterface.js" "%%~D\js\libs\CSInterface.js" >nul
+    xcopy /s /e /y "%SOURCE_DIR%js\libs" "%%~D\js\libs\" >nul 2>&1
     copy /y "%SOURCE_DIR%jsx\hostscript.jsx" "%%~D\jsx\hostscript.jsx" >nul
     copy /y "%SOURCE_DIR%icons\icon.svg" "%%~D\icons\icon.svg" >nul
 )

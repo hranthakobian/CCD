@@ -86,6 +86,13 @@ CSInterface.prototype.evalScript = function(script, callback) {
                 callback(String(resFonts));
                 return;
             }
+            if (trimmed.indexOf("resetToCleanDocument(") === 0) {
+                var resClean = (typeof window.resetToCleanDocument === "function")
+                    ? window.resetToCleanDocument()
+                    : "CLEAN_OK";
+                callback(String(resClean));
+                return;
+            }
             if (trimmed.indexOf("renderSkeletonShimmerInDesign(") === 0) {
                 var matchSkel = trimmed.match(/^renderSkeletonShimmerInDesign\s*\(\s*(['"])([\s\S]*?)\1\s*,\s*(\d+)\s*\)$/);
                 if (matchSkel && typeof window.renderSkeletonShimmerInDesign === "function") {

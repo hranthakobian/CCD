@@ -63,7 +63,12 @@
             scopeAll12: "Բոլոր 12 ամիսները (12 էջ)",
             scopeSingle1: "Միայն ընտրված ամիսը (1 էջ)",
             skeletonToggleLabel: "Սկելետոն շիմեր անիմացիա InDesign-ի էջերում",
-            sec1Title: "1. Հիմնական, Լեզուներ, Վերնագրեր եւ Տոներ",
+            sec1Title: "Հիմնական, Լեզուներ, Վերնագրեր եւ Տոներ",
+            windowsMenu: "Պատուհաններ",
+            windowsMenuTitle: "Պատուհաններ",
+            restoreAllPanes: "Բոլորը",
+            paneScopeTitle: "Ծավալ եւ Շիմեր",
+            statusAllOpened: "Բոլոր փեղկերը բացվեցին։",
             yearLabel: "Տարի",
             monthLabel: "Ամիս (1 ամսվա համար)",
             month0: "Հունվար",
@@ -109,7 +114,7 @@
             country_EU: "Եվրոպա / Միջազգային",
             showInCellHolidayLabel: "Ցուցադրել տոների տեքստը վանդակների մեջ",
             showFooterCaptionLabel: "Ցուցադրել տակագրերը (Ամսվա տոների ստորին տող)",
-            sec2Title: "2. Չափեր, Միավոր, Padding, Margin եւ Դիրք",
+            sec2Title: "Չափեր, Միավոր, Padding, Margin եւ Դիրք",
             unitLabel: "Չափման միավոր",
             unit_mm: "Միլիմետր (mm)",
             unit_cm: "Սանտիմետր (cm)",
@@ -131,7 +136,7 @@
             alignV_TOP: "Վերեւ",
             alignV_CENTER: "Կենտ.",
             alignV_BOTTOM: "Ներքեւ",
-            sec3Title: "3. Տառատեսակներ եւ Տառաչափ (Typography)",
+            sec3Title: "Տառատեսակներ եւ Տառաչափ (Typography)",
             titleFontLabel: "Վերնագրի տառատեսակ",
             headerFontLabel: "Շաբաթվա օրերի տառատեսակ",
             dayFontLabel: "Օրերի թվերի տառատեսակ",
@@ -139,7 +144,7 @@
             sizePtLabel: "Չափ (pt)",
             weekendSizeLabel: "Շաբաթ-Կիրակի (pt)",
             paddingSizeLabel: "Հարեւան ամիսներ (pt)",
-            sec4Title: "4. Գույներ եւ Վանդակների Տեսք (Colors)",
+            sec4Title: "Գույներ եւ Վանդակների Տեսք (Colors)",
             colElem: "Տարր",
             colTextColor: "Տեքստի գույն",
             colBgColor: "Վանդակի ֆոն",
@@ -208,7 +213,12 @@
             scopeAll12: "All 12 Months (12 Pages)",
             scopeSingle1: "Selected Month Only (1 Page)",
             skeletonToggleLabel: "Skeleton shimmer animation on InDesign pages",
-            sec1Title: "1. General, Languages, Headers & Holidays",
+            sec1Title: "General, Languages, Headers & Holidays",
+            windowsMenu: "Windows",
+            windowsMenuTitle: "Windows",
+            restoreAllPanes: "All",
+            paneScopeTitle: "Scope & Shimmer",
+            statusAllOpened: "All panes restored.",
             yearLabel: "Year",
             monthLabel: "Month (for 1 page)",
             month0: "January",
@@ -254,7 +264,7 @@
             country_EU: "Europe / International",
             showInCellHolidayLabel: "Show Holiday Names Inside Cells",
             showFooterCaptionLabel: "Show Footer Captions (Bottom Holiday Row)",
-            sec2Title: "2. Dimensions, Unit, Padding, Margin & Position",
+            sec2Title: "Dimensions, Unit, Padding, Margin & Position",
             unitLabel: "Measurement Unit",
             unit_mm: "Millimeters (mm)",
             unit_cm: "Centimeters (cm)",
@@ -276,7 +286,7 @@
             alignV_TOP: "Top",
             alignV_CENTER: "Mid.",
             alignV_BOTTOM: "Bot.",
-            sec3Title: "3. Fonts & Font Sizes (Typography)",
+            sec3Title: "Fonts & Font Sizes (Typography)",
             titleFontLabel: "Title Font",
             headerFontLabel: "Weekdays Header Font",
             dayFontLabel: "Day Numbers Font",
@@ -284,7 +294,7 @@
             sizePtLabel: "Size (pt)",
             weekendSizeLabel: "Weekend (pt)",
             paddingSizeLabel: "Adjacent Months (pt)",
-            sec4Title: "4. Colors & Cell Appearance",
+            sec4Title: "Colors & Cell Appearance",
             colElem: "Element",
             colTextColor: "Text Color",
             colBgColor: "Cell Fill",
@@ -391,6 +401,7 @@
         updateScopeUI();
         updateStartButtonState(isRendering);
         updatePanelPreview();
+        try { renderWindowsDropdownItems(); } catch (eWin) {}
     }
 
     var isStarted = false;
@@ -422,12 +433,7 @@
                 textEl.textContent = t("refreshText");
             }
             if (iconEl) {
-                iconEl.textContent = "↻";
-                if (rendering) {
-                    iconEl.className = "btn-icon spinning";
-                } else {
-                    iconEl.className = "btn-icon";
-                }
+                iconEl.innerHTML = '<i class="hd-icon hd-icon-redo-arrow' + (rendering ? ' spinning' : '') + '"></i>';
             }
         } else {
             startBtn.className = "btn-action btn-start";
@@ -436,8 +442,7 @@
                 textEl.textContent = t("startPreviewText");
             }
             if (iconEl) {
-                iconEl.textContent = "▶";
-                iconEl.className = "btn-icon";
+                iconEl.innerHTML = '<i class="hd-icon hd-icon-play"></i>';
             }
         }
     }
@@ -609,7 +614,8 @@
                             }
                         }
                         updatePanelPreview();
-                        if (triggerUpdate) {
+                        var liveToggle = byId("inDesignLivePreview");
+                        if (triggerUpdate && liveToggle && liveToggle.checked) {
                             scheduleLiveInDesignUpdate();
                         }
                     }
@@ -621,26 +627,31 @@
     }
 
     function initInDesignAutoConnect() {
-        checkAndAutoSyncInDesign(true);
+        var liveToggle = byId("inDesignLivePreview");
+        checkAndAutoSyncInDesign(liveToggle && liveToggle.checked);
 
         try {
             csInterface.addEventListener("documentAfterActivate", function() {
                 usePageMargins = true;
-                checkAndAutoSyncInDesign(true);
+                var lt = byId("inDesignLivePreview");
+                checkAndAutoSyncInDesign(lt && lt.checked);
             });
             csInterface.addEventListener("documentAfterOpen", function() {
                 usePageMargins = true;
-                checkAndAutoSyncInDesign(true);
+                var lt = byId("inDesignLivePreview");
+                checkAndAutoSyncInDesign(lt && lt.checked);
             });
             csInterface.addEventListener("documentAfterNew", function() {
                 usePageMargins = true;
-                checkAndAutoSyncInDesign(true);
+                var lt = byId("inDesignLivePreview");
+                checkAndAutoSyncInDesign(lt && lt.checked);
             });
         } catch (eCepEvents) {}
 
         try {
             setInterval(function() {
-                checkAndAutoSyncInDesign(true);
+                var lt = byId("inDesignLivePreview");
+                checkAndAutoSyncInDesign(lt && lt.checked);
             }, 2500);
         } catch (eTimer) {}
     }
@@ -1656,6 +1667,393 @@
         }
     }
 
+    /* ==========================================================================
+       Panes System (Ծալովի, Տեղափոխելի, Փակելի / Բացելի) & Hakobian Components
+       ========================================================================== */
+    var PANE_DEFINITIONS = [
+        { id: "pane-preview", titleKey: "sec5PreviewTitle", defaultTitle: "Նախադիտում եւ Տոների Ցանկ" },
+        { id: "pane-scope", titleKey: "paneScopeTitle", defaultTitle: "Ծավալ եւ Շիմեր" },
+        { id: "pane-general", titleKey: "sec1Title", defaultTitle: "Հիմնական, Լեզուներ, Վերնագրեր եւ Տոներ" },
+        { id: "pane-dimensions", titleKey: "sec2Title", defaultTitle: "Չափեր, Միավոր, Padding, Margin եւ Դիրք" },
+        { id: "pane-typography", titleKey: "sec3Title", defaultTitle: "Տառատեսակներ եւ Տառաչափ (Typography)" },
+        { id: "pane-colors", titleKey: "sec4Title", defaultTitle: "Գույներ եւ Վանդակների Տեսք (Colors)" }
+    ];
+
+    function initPanesSystem() {
+        var container = byId("panesContainer");
+        if (!container) return;
+
+        // 1. Restore saved order
+        try {
+            var savedOrder = JSON.parse(localStorage.getItem("ccd_panes_order") || "null");
+            if (Array.isArray(savedOrder)) {
+                savedOrder.forEach(function(paneId) {
+                    var el = byId(paneId);
+                    if (el && el.parentNode === container) {
+                        container.appendChild(el);
+                    }
+                });
+            }
+        } catch (eOrder) {}
+
+        // 2. Restore collapsed states
+        try {
+            var collapsedMap = JSON.parse(localStorage.getItem("ccd_panes_collapsed") || "{}");
+            PANE_DEFINITIONS.forEach(function(paneDef) {
+                var el = byId(paneDef.id);
+                if (el && collapsedMap[paneDef.id]) {
+                    el.classList.add("collapsed");
+                }
+            });
+        } catch (eCol) {}
+
+        // 3. Restore closed states
+        try {
+            var closedMap = JSON.parse(localStorage.getItem("ccd_panes_closed") || "{}");
+            PANE_DEFINITIONS.forEach(function(paneDef) {
+                var el = byId(paneDef.id);
+                if (el && closedMap[paneDef.id]) {
+                    el.classList.add("is-closed");
+                    el.style.display = "none";
+                }
+            });
+        } catch (eClosed) {}
+
+        // 4. Wire events on all panes
+        var allPanes = container.querySelectorAll(".pane-card");
+        for (var i = 0; i < allPanes.length; i++) {
+            (function(pane) {
+                var handle = pane.querySelector(".pane-drag-handle");
+                if (handle) {
+                    handle.addEventListener("mousedown", function() {
+                        pane.draggable = true;
+                    });
+                    handle.addEventListener("mouseup", function() {
+                        pane.draggable = false;
+                    });
+                }
+
+                pane.addEventListener("dragstart", function(e) {
+                    pane.classList.add("is-dragging");
+                    if (e.dataTransfer) {
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", pane.id);
+                    }
+                });
+
+                pane.addEventListener("dragend", function() {
+                    pane.draggable = false;
+                    pane.classList.remove("is-dragging");
+                    savePanesOrder();
+                });
+
+                // Collapse button
+                var collapseBtn = pane.querySelector(".pane-collapse-btn");
+                if (collapseBtn) {
+                    collapseBtn.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        togglePaneCollapse(pane.id);
+                    });
+                }
+
+                // Double click header to collapse/expand
+                var header = pane.querySelector(".pane-header");
+                if (header) {
+                    header.addEventListener("dblclick", function(e) {
+                        if (e.target.closest(".pane-header-actions")) return;
+                        togglePaneCollapse(pane.id);
+                    });
+                }
+
+                // Close button
+                var closeBtn = pane.querySelector(".pane-close-btn");
+                if (closeBtn) {
+                    closeBtn.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        closePane(pane.id, true);
+                    });
+                }
+            })(allPanes[i]);
+        }
+
+        container.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            var draggingEl = container.querySelector(".is-dragging");
+            if (!draggingEl) return;
+
+            var afterElement = getDragAfterElement(container, e.clientY);
+            if (afterElement == null) {
+                container.appendChild(draggingEl);
+            } else if (afterElement !== draggingEl) {
+                container.insertBefore(draggingEl, afterElement);
+            }
+        });
+
+        // 5. Wire Windows Dropdown
+        initWindowsDropdown();
+        updateWindowsMenuUI();
+    }
+
+    function getDragAfterElement(container, y) {
+        var draggableElements = Array.from(container.querySelectorAll(".pane-card:not(.is-dragging):not(.is-closed)"));
+        return draggableElements.reduce(function(closest, child) {
+            var box = child.getBoundingClientRect();
+            var offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function savePanesOrder() {
+        var container = byId("panesContainer");
+        if (!container) return;
+        var order = Array.from(container.querySelectorAll(".pane-card")).map(function(el) {
+            return el.id;
+        });
+        try {
+            localStorage.setItem("ccd_panes_order", JSON.stringify(order));
+        } catch (e) {}
+    }
+
+    function togglePaneCollapse(paneId) {
+        var pane = byId(paneId);
+        if (!pane) return;
+        pane.classList.toggle("collapsed");
+
+        try {
+            var collapsedMap = JSON.parse(localStorage.getItem("ccd_panes_collapsed") || "{}");
+            collapsedMap[paneId] = pane.classList.contains("collapsed");
+            localStorage.setItem("ccd_panes_collapsed", JSON.stringify(collapsedMap));
+        } catch (e) {}
+    }
+
+    function closePane(paneId, animate) {
+        var pane = byId(paneId);
+        if (!pane || pane.classList.contains("is-closed")) return;
+
+        var winBtn = byId("windowsDropdownBtn");
+
+        if (animate !== false && winBtn) {
+            var paneRect = pane.getBoundingClientRect();
+            var btnRect = winBtn.getBoundingClientRect();
+            var dx = (btnRect.left + btnRect.width / 2) - (paneRect.left + paneRect.width / 2);
+            var dy = (btnRect.top + btnRect.height / 2) - (paneRect.top + paneRect.height / 2);
+
+            pane.style.transition = "transform 0.38s cubic-bezier(0.2, 0.8, 0.25, 1), opacity 0.32s ease-in";
+            pane.style.transform = "translate(" + dx + "px, " + dy + "px) scale(0.06)";
+            pane.style.opacity = "0";
+            pane.style.pointerEvents = "none";
+
+            setTimeout(function() {
+                pane.classList.add("is-closed");
+                pane.style.display = "none";
+                pane.style.transform = "";
+                pane.style.opacity = "";
+                pane.style.transition = "";
+                pane.style.pointerEvents = "";
+
+                triggerWindowsButtonPulse();
+                updateWindowsMenuUI();
+                saveClosedPanesState();
+            }, 360);
+        } else {
+            pane.classList.add("is-closed");
+            pane.style.display = "none";
+            updateWindowsMenuUI();
+            saveClosedPanesState();
+        }
+    }
+
+    function openPane(paneId, animate) {
+        var pane = byId(paneId);
+        if (!pane || !pane.classList.contains("is-closed")) return;
+
+        pane.classList.remove("is-closed");
+        pane.style.display = "";
+
+        if (animate !== false) {
+            pane.style.transition = "none";
+            pane.style.opacity = "0";
+            pane.style.transform = "translateY(-14px) scale(0.96)";
+            void pane.offsetHeight;
+
+            pane.style.transition = "transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease-out";
+            pane.style.opacity = "1";
+            pane.style.transform = "translateY(0) scale(1)";
+
+            setTimeout(function() {
+                pane.style.transition = "";
+                pane.style.transform = "";
+                pane.style.opacity = "";
+            }, 340);
+        }
+
+        updateWindowsMenuUI();
+        saveClosedPanesState();
+    }
+
+    function saveClosedPanesState() {
+        try {
+            var closedMap = {};
+            PANE_DEFINITIONS.forEach(function(paneDef) {
+                var el = byId(paneDef.id);
+                if (el && el.classList.contains("is-closed")) {
+                    closedMap[paneDef.id] = true;
+                }
+            });
+            localStorage.setItem("ccd_panes_closed", JSON.stringify(closedMap));
+        } catch (e) {}
+    }
+
+    function triggerWindowsButtonPulse() {
+        var winBtn = byId("windowsDropdownBtn");
+        if (winBtn) {
+            winBtn.classList.remove("indicator-pulse");
+            void winBtn.offsetWidth;
+            winBtn.classList.add("indicator-pulse");
+            setTimeout(function() {
+                winBtn.classList.remove("indicator-pulse");
+            }, 600);
+        }
+    }
+
+    function initWindowsDropdown() {
+        var winBtn = byId("windowsDropdownBtn");
+        var winWrap = byId("windowsDropdownWrap");
+        var menu = byId("windowsDropdownMenu");
+        var restoreAllBtn = byId("restoreAllPanesBtn");
+
+        if (winBtn && winWrap && menu) {
+            winBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                var isOpen = winWrap.classList.contains("open");
+                if (isOpen) {
+                    winWrap.classList.remove("open");
+                    menu.classList.add("hidden");
+                } else {
+                    winWrap.classList.add("open");
+                    menu.classList.remove("hidden");
+                    renderWindowsDropdownItems();
+                }
+            });
+
+            document.addEventListener("click", function(e) {
+                if (!winWrap.contains(e.target)) {
+                    winWrap.classList.remove("open");
+                    menu.classList.add("hidden");
+                }
+            });
+        }
+
+        if (restoreAllBtn) {
+            restoreAllBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                PANE_DEFINITIONS.forEach(function(def) {
+                    openPane(def.id, true);
+                });
+                showStatus(t("statusAllOpened"), false);
+            });
+        }
+    }
+
+    function updateWindowsMenuUI() {
+        var closedPanes = document.querySelectorAll(".pane-card.is-closed");
+        var closedCount = closedPanes.length;
+        var badge = byId("windowsIndicatorBadge");
+        var winBtn = byId("windowsDropdownBtn");
+
+        if (badge) {
+            badge.textContent = closedCount;
+            if (closedCount > 0) {
+                badge.classList.remove("hidden");
+                if (winBtn) winBtn.classList.add("has-closed-panes");
+            } else {
+                badge.classList.add("hidden");
+                if (winBtn) winBtn.classList.remove("has-closed-panes");
+            }
+        }
+
+        renderWindowsDropdownItems();
+    }
+
+    function renderWindowsDropdownItems() {
+        var list = byId("windowsDropdownList");
+        if (!list) return;
+
+        list.innerHTML = "";
+        PANE_DEFINITIONS.forEach(function(def) {
+            var paneEl = byId(def.id);
+            var isClosed = paneEl ? paneEl.classList.contains("is-closed") : false;
+            var titleText = t(def.titleKey) || def.defaultTitle;
+
+            var item = document.createElement("div");
+            item.className = "windows-dropdown-item" + (isClosed ? " is-closed" : "");
+            item.setAttribute("data-pane-id", def.id);
+
+            var iconClass = isClosed ? "hd-icon hd-icon-Close" : "hd-icon hd-icon-eye";
+            var statusLabel = isClosed ? (currentUiLang === "en" ? "Closed" : "Փակ") : (currentUiLang === "en" ? "Open" : "Բաց");
+
+            item.innerHTML = '<i class="' + iconClass + ' pane-status-icon"></i>' +
+                '<span class="windows-item-title">' + titleText + '</span>' +
+                '<span class="windows-item-status">' + statusLabel + '</span>';
+
+            item.addEventListener("click", function(e) {
+                e.stopPropagation();
+                if (isClosed) {
+                    openPane(def.id, true);
+                } else {
+                    closePane(def.id, true);
+                }
+            });
+
+            list.appendChild(item);
+        });
+    }
+
+    function initHakobianSliders() {
+        var sliderPairs = [
+            { numId: "tableWidthInput", sliderId: "tableWidthSlider" },
+            { numId: "tableHeightInput", sliderId: "tableHeightSlider" },
+            { numId: "tableLeftInput", sliderId: "tableLeftSlider" },
+            { numId: "tableTopInput", sliderId: "tableTopSlider" },
+            { numId: "cellPadXInput", sliderId: "cellPadXSlider" },
+            { numId: "cellPadYInput", sliderId: "cellPadYSlider" },
+            { numId: "cellMarginInput", sliderId: "cellMarginSlider" },
+            { numId: "titleSize", sliderId: "titleSizeSlider" },
+            { numId: "headerSize", sliderId: "headerSizeSlider" },
+            { numId: "daySize", sliderId: "daySizeSlider" },
+            { numId: "weekendSize", sliderId: "weekendSizeSlider" },
+            { numId: "paddingSize", sliderId: "paddingSizeSlider" }
+        ];
+
+        sliderPairs.forEach(function(pair) {
+            var numInput = byId(pair.numId);
+            var sliderEl = byId(pair.sliderId);
+            if (!numInput || !sliderEl) return;
+
+            try {
+                sliderEl.value = numInput.value;
+            } catch (e) {}
+
+            sliderEl.addEventListener("input", function() {
+                if (numInput.value !== sliderEl.value) {
+                    numInput.value = sliderEl.value;
+                    numInput.dispatchEvent(new Event("input", { bubbles: true }));
+                    numInput.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+            });
+
+            numInput.addEventListener("input", function() {
+                if (sliderEl.value !== numInput.value) {
+                    sliderEl.value = numInput.value;
+                }
+            });
+        });
+    }
+
     function initUI() {
         if (!isInitialized && byId("generateAllBtn")) {
             try { initSwatchPalette(); } catch (e) {}
@@ -1760,6 +2158,19 @@
                         clearTimeout(liveRenderTimer);
                         liveRenderTimer = null;
                     }
+                    pendingRenderMode = null;
+                    pendingRenderIsLive = false;
+
+                    // Turn off Live Preview to prevent instant re-generation after clean
+                    var liveChk = byId("inDesignLivePreview");
+                    if (liveChk) {
+                        liveChk.checked = false;
+                    }
+                    var toggleBtn = byId("toggleLivePreviewBtn");
+                    if (toggleBtn) {
+                        toggleBtn.className = "btn-action btn-live inactive";
+                    }
+
                     var statusMsg = byId("statusMsg");
                     if (statusMsg) {
                         statusMsg.className = "status-msg";
@@ -1866,6 +2277,8 @@
             isInitialized = true;
             try { initInDesignAutoConnect(); } catch (eAuto) {}
             try { loadInstalledFontsFromHost(); } catch (eFonts) {}
+            try { initPanesSystem(); } catch (ePanes) {}
+            try { initHakobianSliders(); } catch (eSliders) {}
         }
         updateScopeUI();
         updateStartButtonState(isRendering);

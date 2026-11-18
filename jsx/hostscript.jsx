@@ -677,6 +677,11 @@ function isCalendarFrame(tf) {
         }
     } catch (e1) {}
     try {
+        if (tf.name && tf.name.indexOf("Calendar_") === 0) {
+            return true;
+        }
+    } catch (eName) {}
+    try {
         if (tf.itemLayer && tf.itemLayer.name === "Calendar_Generator") {
             return true;
         }
@@ -690,44 +695,73 @@ function isCalendarFrame(tf) {
 }
 
 function clearDocumentCalendarFrames(doc, calLayer) {
+    if (calLayer && calLayer.isValid) {
+        try { calLayer.locked = false; } catch (eL) {}
+        try { calLayer.visible = true; } catch (eV) {}
+    }
+
+    try {
+        if (calLayer && calLayer.isValid) {
+            for (var c = calLayer.pageItems.length - 1; c >= 0; c--) {
+                try {
+                    var cItem = calLayer.pageItems.item(c);
+                    if (cItem && cItem.isValid) {
+                        try { cItem.locked = false; } catch (eLk) {}
+                        cItem.remove();
+                    }
+                } catch (eCi) {}
+            }
+        }
+    } catch (eCalItems) {}
+
     try {
         for (var p = 0; p < doc.pages.length; p++) {
             clearPageCalendarFrames(doc.pages.item(p));
         }
     } catch (eP) {}
+
     try {
         for (var i = doc.textFrames.length - 1; i >= 0; i--) {
-            var tf = doc.textFrames.item(i);
-            if (isCalendarFrame(tf)) {
-                tf.remove();
-            }
+            try {
+                var tf = doc.textFrames.item(i);
+                if (tf && tf.isValid && isCalendarFrame(tf)) {
+                    try { tf.locked = false; } catch (eTfL) {}
+                    tf.remove();
+                }
+            } catch (eTf) {}
         }
-    } catch (e) {}
+    } catch (eAllTf) {}
+
     try {
         if (calLayer && calLayer.isValid) {
-            while (calLayer.pageItems.length > 0) {
-                calLayer.pageItems.item(0).remove();
-            }
+            try { calLayer.locked = false; } catch (eL2) {}
+            calLayer.remove();
         }
-    } catch (e2) {}
+    } catch (eLayerRemove) {}
 }
 
 function clearPageCalendarFrames(page) {
     if (!page || !page.isValid) return;
     try {
         for (var i = page.textFrames.length - 1; i >= 0; i--) {
-            var tf = page.textFrames.item(i);
-            if (isCalendarFrame(tf)) {
-                tf.remove();
-            }
+            try {
+                var tf = page.textFrames.item(i);
+                if (tf && tf.isValid && isCalendarFrame(tf)) {
+                    try { tf.locked = false; } catch (eTfLk) {}
+                    tf.remove();
+                }
+            } catch (eTf) {}
         }
     } catch (e1) {}
     try {
         for (var j = page.pageItems.length - 1; j >= 0; j--) {
-            var pi = page.pageItems.item(j);
-            if (isCalendarFrame(pi)) {
-                pi.remove();
-            }
+            try {
+                var pi = page.pageItems.item(j);
+                if (pi && pi.isValid && isCalendarFrame(pi)) {
+                    try { pi.locked = false; } catch (ePiLk) {}
+                    pi.remove();
+                }
+            } catch (ePi) {}
         }
     } catch (e2) {}
 }
@@ -1617,13 +1651,19 @@ function resetToCleanDocument() {
     try {
         while (doc.pages.length > 1) {
             var lastP = doc.pages.item(doc.pages.length - 1);
-            if (lastP.pageItems.length === 0) {
+            if (lastP && lastP.isValid && lastP.pageItems.length === 0) {
                 lastP.remove();
             } else {
                 break;
             }
         }
     } catch (e2) {}
+
+    try {
+        if (hostApp.activeWindow && doc.pages.length > 0) {
+            hostApp.activeWindow.activePage = doc.pages.item(0);
+        }
+    } catch (eWin) {}
 
     try {
         if (hostApp.scriptPreferences) {
