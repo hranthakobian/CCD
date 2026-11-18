@@ -3,7 +3,7 @@
 
     var csInterface = new CSInterface();
 
-    var PLUGIN_VERSION = "1.0.0";
+    var PLUGIN_VERSION = "1.1.0";
     var GITHUB_REPO = "hranthakobian/CCD";
     var GITHUB_RELEASES_API = "https://api.github.com/repos/" + GITHUB_REPO + "/releases/latest";
     var GITHUB_RELEASES_LIST_API = "https://api.github.com/repos/" + GITHUB_REPO + "/releases";

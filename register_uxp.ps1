@@ -26,7 +26,7 @@ if (Test-Path $infoPath) {
 }
 
 $newEntry = [PSCustomObject]@{
-    versionString  = "1.0.0"
+    versionString  = "1.1.0"
     type           = "UXP"
     hostMinVersion = "18.5.0"
     pluginId       = "com.calendar.generator"
