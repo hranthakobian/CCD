@@ -96,13 +96,29 @@ CSInterface.prototype.evalScript = function(script, callback) {
                     return;
                 }
             }
+            if (trimmed.indexOf("generateCalendarFromConfig(") === 0) {
+                var matchCfg = trimmed.match(/^generateCalendarFromConfig\s*\(\s*(['"])([\s\S]*?)\1\s*\)$/);
+                if (matchCfg && typeof window.generateCalendarFromConfig === "function") {
+                    var rawArgCfg = matchCfg[2].replace(/\\'/g, "'").replace(/\\\\/g, "\\");
+                    var resCfg = window.generateCalendarFromConfig(rawArgCfg);
+                    callback(String(resCfg));
+                    return;
+                }
+            }
             if (trimmed.indexOf("generateCalendar(") === 0) {
                 var matchGen = trimmed.match(/^generateCalendar\s*\(\s*(['"])([\s\S]*?)\1\s*\)$/);
-                if (matchGen && typeof window.generateCalendar === "function") {
+                if (matchGen) {
                     var rawArgGen = matchGen[2].replace(/\\'/g, "'").replace(/\\\\/g, "\\");
-                    var resGen = window.generateCalendar(rawArgGen);
-                    callback(String(resGen));
-                    return;
+                    if (rawArgGen.indexOf("{") !== -1 && typeof window.generateCalendarFromConfig === "function") {
+                        var resGenCfg = window.generateCalendarFromConfig(rawArgGen);
+                        callback(String(resGenCfg));
+                        return;
+                    }
+                    if (typeof window.generateCalendar === "function") {
+                        var resGen = window.generateCalendar(rawArgGen);
+                        callback(String(resGen));
+                        return;
+                    }
                 }
             }
 

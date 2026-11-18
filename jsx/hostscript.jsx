@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calendar Generator Pro - Fast ExtendScript & UXP Backend for Adobe InDesign
  */
 
@@ -275,25 +275,48 @@ function getOrCreateHexColor(doc, ctx, hexStr) {
     }
     var swatchName = "Cal_RGB_" + normHex;
     var rgb = hexToRgbArray(normHex);
-    var color = doc.colors.itemByName(swatchName);
-    if (!color || !color.isValid) {
-        var props = {
-            name: swatchName,
-            colorValue: rgb
-        };
-        if (ctx.ColorModel && ctx.ColorModel.PROCESS) {
-            props.model = ctx.ColorModel.PROCESS;
+
+    try {
+        var existingSwatch = doc.swatches.itemByName(swatchName);
+        if (existingSwatch && existingSwatch.isValid) {
+            return existingSwatch;
         }
-        if (ctx.ColorSpace && ctx.ColorSpace.RGB) {
-            props.space = ctx.ColorSpace.RGB;
+    } catch (eSw1) {}
+
+    try {
+        var existingColor = doc.colors.itemByName(swatchName);
+        if (existingColor && existingColor.isValid) {
+            return existingColor;
         }
-        try {
-            color = doc.colors.add(props);
-        } catch (e) {
-            color = doc.swatches.itemByName("Black");
-        }
+    } catch (eCol1) {}
+
+    var props = {
+        name: swatchName,
+        colorValue: rgb
+    };
+    if (ctx && ctx.ColorModel && ctx.ColorModel.PROCESS) {
+        props.model = ctx.ColorModel.PROCESS;
     }
-    return color;
+    if (ctx && ctx.ColorSpace && ctx.ColorSpace.RGB) {
+        props.space = ctx.ColorSpace.RGB;
+    }
+    try {
+        return doc.colors.add(props);
+    } catch (eAdd) {
+        try {
+            var sw2 = doc.swatches.itemByName(swatchName);
+            if (sw2 && sw2.isValid) return sw2;
+        } catch (eSw2) {}
+        try {
+            var col2 = doc.colors.itemByName(swatchName);
+            if (col2 && col2.isValid) return col2;
+        } catch (eCol2) {}
+        try {
+            var blk = doc.swatches.itemByName("Black");
+            if (blk && blk.isValid) return blk;
+        } catch (eBlk) {}
+        return doc.swatches.item(0);
+    }
 }
 
 function getLocaleData(lang) {
@@ -668,6 +691,11 @@ function isCalendarFrame(tf) {
 
 function clearDocumentCalendarFrames(doc, calLayer) {
     try {
+        for (var p = 0; p < doc.pages.length; p++) {
+            clearPageCalendarFrames(doc.pages.item(p));
+        }
+    } catch (eP) {}
+    try {
         for (var i = doc.textFrames.length - 1; i >= 0; i--) {
             var tf = doc.textFrames.item(i);
             if (isCalendarFrame(tf)) {
@@ -676,13 +704,16 @@ function clearDocumentCalendarFrames(doc, calLayer) {
         }
     } catch (e) {}
     try {
-        while (calLayer.pageItems.length > 0) {
-            calLayer.pageItems.item(0).remove();
+        if (calLayer && calLayer.isValid) {
+            while (calLayer.pageItems.length > 0) {
+                calLayer.pageItems.item(0).remove();
+            }
         }
     } catch (e2) {}
 }
 
 function clearPageCalendarFrames(page) {
+    if (!page || !page.isValid) return;
     try {
         for (var i = page.textFrames.length - 1; i >= 0; i--) {
             var tf = page.textFrames.item(i);
@@ -690,7 +721,15 @@ function clearPageCalendarFrames(page) {
                 tf.remove();
             }
         }
-    } catch (e) {}
+    } catch (e1) {}
+    try {
+        for (var j = page.pageItems.length - 1; j >= 0; j--) {
+            var pi = page.pageItems.item(j);
+            if (isCalendarFrame(pi)) {
+                pi.remove();
+            }
+        }
+    } catch (e2) {}
 }
 
 function getInstalledFontFamilies() {
@@ -828,7 +867,7 @@ function applyTableBatchCellStyle(table, vJustEnum, padXStr, padYStr, strokeWeig
 
 function resolvePageFrameBox(doc, page, unitSuffix, ctx, cfg) {
     var pageBox = getPageMarginBox(doc, page, unitSuffix, ctx);
-    var useAutoMargins = (cfg.usePageMargins !== false);
+    var useAutoMargins = (cfg.usePageMargins === true);
 
     if (useAutoMargins) {
         return {
@@ -912,7 +951,17 @@ function renderSkeletonShimmerInDesign(configInput, shimmerStep) {
         var showTitle = (cfg.showTitle !== false);
         var showWeekdays = (cfg.showWeekdays !== false);
         var showFooter = (cfg.enableHolidays !== false) && (cfg.showFooterCaption !== false);
-        var weekRows = 5;
+        var skelYear = parseInt(cfg.year, 10) || 2026;
+        var skelMonth = parseInt(cfg.month, 10);
+        if (isNaN(skelMonth) || skelMonth < 0 || skelMonth > 11) skelMonth = 0;
+        var skelIsMon = (cfg.startDay === "mon");
+        var skelFirstDay = new Date(skelYear, skelMonth, 1).getDay();
+        var skelOffset = skelIsMon ? ((skelFirstDay + 6) % 7) : skelFirstDay;
+        var skelDaysInMonth = getDaysInMonth(skelYear, skelMonth);
+        var weekRows = Math.ceil((skelOffset + skelDaysInMonth) / 7);
+        if (isNaN(weekRows) || weekRows < 5) {
+            weekRows = 5;
+        }
         var totalRows = weekRows + (showTitle ? 1 : 0) + (showWeekdays ? 1 : 0) + (showFooter ? 1 : 0);
 
         var frameBox = resolvePageFrameBox(doc, activePage, unitSuffix, ctx, cfg);
@@ -1032,7 +1081,7 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
     var daysInPrevMonth = getDaysInMonth(numYear, mIdx - 1);
 
     var weekRows = Math.ceil((startOffset + daysInCurrentMonth) / 7);
-    if (isNaN(weekRows) || weekRows < 4) {
+    if (isNaN(weekRows) || weekRows < 5) {
         weekRows = 5;
     }
 
@@ -1299,7 +1348,11 @@ function buildMonthTableOnPage(doc, hostApp, ctx, page, layer, cfg, monthIndex, 
                 } catch (ePadStyle) {}
             } else {
                 dayCell.contents = "";
-                dayCell.fillColor = colors.dayBg;
+                try {
+                    dayCell.fillColor = doc.swatches.itemByName("None");
+                } catch (eNone) {
+                    dayCell.fillColor = colors.dayBg;
+                }
             }
         } else {
             var currentDay = i - startOffset + 1;
@@ -1367,11 +1420,25 @@ function parseConfigString(rawStr) {
     if (typeof rawStr === "object" && rawStr !== null) {
         return rawStr;
     }
-    if (typeof JSON !== "undefined" && JSON.parse) {
-        return JSON.parse(rawStr);
+    if (typeof rawStr !== "string") {
+        return {};
     }
-    var fn = new Function("return (" + rawStr + ");");
-    return fn();
+    var cleanStr = rawStr.replace(/^\s+|\s+$/g, "");
+    if (typeof JSON !== "undefined" && JSON && typeof JSON.parse === "function") {
+        try {
+            return JSON.parse(cleanStr);
+        } catch (eJson) {}
+    }
+    try {
+        return eval("(" + cleanStr + ")");
+    } catch (eEval) {
+        try {
+            var fn = new Function("return (" + cleanStr + ");");
+            return fn();
+        } catch (eFn) {
+            return {};
+        }
+    }
 }
 
 function generateCalendarFromConfig(configInput) {
@@ -1465,6 +1532,9 @@ function generateCalendarFromConfig(configInput) {
 }
 
 function generateCalendar(year, monthIndex, lang, startDay, showPadding) {
+    if (typeof year === "string" && (year.charAt(0) === "{" || year.indexOf("{") !== -1)) {
+        return generateCalendarFromConfig(year);
+    }
     var defaultCfg = {
         mode: "all",
         year: parseInt(year, 10) || 2026,

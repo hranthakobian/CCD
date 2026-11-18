@@ -39,12 +39,12 @@
             loadingUpdating: "Թարմացվում է InDesign-ում...",
             loadingPreparing: "Պատրաստվում է թարմացման...",
             loadingShimmer: "Սահուն շիմեր անիմացիա...",
-            loadingGenerating: "Գեներացվում է օրացույցը InDesign-ում...",
+            loadingGenerating: "Ստեղծվում է օրացույցը InDesign-ում...",
             loadingDone: "Ավարտված է (100%)",
             startPreviewBtn: "▶ Սկսել",
-            liveActiveBtn: "Live Preview՝ ՄԻԱՑՎԱԾ Է (Անջատել)",
-            liveInactiveBtn: "Live Preview՝ ԱՆՋԱՏՎԱԾ Է (Միացնել)",
-            previewScopeLabel: "Նախադիտման եւ գեներացման ծավալ",
+            liveActiveBtn: "Ուղիղ Նախադիտում՝ ՄԻԱՑՎԱԾ Է (Անջատել)",
+            liveInactiveBtn: "Ուղիղ Նախադիտում՝ ԱՆՋԱՏՎԱԾ Է (Միացնել)",
+            previewScopeLabel: "Նախադիտման եւ ստեղծման ծավալ",
             scopeAll12: "Բոլոր 12 ամիսները (12 էջ)",
             scopeSingle1: "Միայն ընտրված ամիսը (1 էջ)",
             skeletonToggleLabel: "Սկելետոն շիմեր անիմացիա InDesign-ի էջերում",
@@ -135,8 +135,8 @@
             colorFixedHolidays: "Պետական տոներ",
             colorMovableHolidays: "Շարժական տոներ",
             sec5PreviewTitle: "Նախադիտում եւ Տոների Ցանկ",
-            genAllBtn: "Գեներացնել 12 ամիսները (12 էջ)",
-            genSingleBtn: "Գեներացնել միայն ընտրված ամիսը",
+            genAllBtn: "Ստեղծել 12 ամիսները (12 էջ)",
+            genSingleBtn: "Ստեղծել միայն ընտրված ամիսը",
             scopeShortAll: "12 ամիս (12 էջ)",
             scopeShortSinglePrefix: "1 ամիս (",
             holidaysDisabledMsg: "Տոները անջատված են։",
@@ -144,9 +144,9 @@
             noHolidaysInMonthSuffix: " ամսում նշված տոներ չկան։",
             badgeMovable: " (Շարժ.)",
             badgeFixed: " (Անշ.)",
-            statusLive12: "Live Preview՝ բոլոր 12 էջերը թարմացվեցին։",
+            statusLive12: "Ուղիղ Նախադիտում՝ բոլոր 12 էջերը թարմացվեցին։",
             statusGen12: "Բոլոր 12 ամիսները (12 էջ) հաջողությամբ ստեղծվեցին։",
-            statusLive1: "Live Preview՝ ընտրված ամսվա էջը թարմացվեց։",
+            statusLive1: "Ուղիղ Նախադիտում՝ ընտրված ամսվա էջը թարմացվեց։",
             statusGen1: "Ընտրված ամսվա աղյուսակը հաջողությամբ ստեղծվեց։",
             statusNoHost: "InDesign միջավայրը հասանելի չէ։",
             statusErrorPrefix: "Սխալ՝ ",
@@ -296,6 +296,7 @@
     var hideProgressTimer = null;
     var isRendering = false;
     var pendingRenderMode = null;
+    var pendingRenderIsLive = false;
     var currentUnit = "mm";
     var currentAlignH = "CENTER";
     var currentAlignV = "CENTER";
@@ -459,7 +460,7 @@
                         byId("unitSelect").value = info.unit;
                     }
                     updateUnitLabels(info.unit);
-                    if (info.hasDoc || usePageMargins) {
+                    if (usePageMargins) {
                         if (byId("tableWidthInput")) {
                             byId("tableWidthInput").value = String(info.w);
                         }
@@ -652,6 +653,9 @@
         var startOffset = (startDay === "mon") ? ((firstDayOfMonth + 6) % 7) : firstDayOfMonth;
         var totalSlotsNeeded = startOffset + daysInCurrentMonth;
         var weekRows = Math.ceil(totalSlotsNeeded / 7);
+        if (weekRows < 5) {
+            weekRows = 5;
+        }
         var totalCells = weekRows * 7;
 
         var cells = [];
@@ -833,8 +837,10 @@
 
             if (pendingRenderMode) {
                 var nextMode = pendingRenderMode;
+                var nextIsLive = pendingRenderIsLive;
                 pendingRenderMode = null;
-                executeInDesignGeneration(nextMode, true);
+                pendingRenderIsLive = false;
+                executeInDesignGeneration(nextMode, nextIsLive);
                 return;
             }
             if (!statusMsg) {
@@ -860,6 +866,7 @@
         var statusMsg = byId("statusMsg");
         if (isRendering) {
             pendingRenderMode = mode;
+            pendingRenderIsLive = isLivePreview;
             return;
         }
         isRendering = true;
@@ -870,10 +877,10 @@
 
         if (statusMsg) {
             statusMsg.className = "status-msg";
-            statusMsg.textContent = cfg.enableSkeleton ? t("statusShimmerPage") : t("statusCreatingCal");
+            statusMsg.textContent = (cfg.enableSkeleton && isLivePreview) ? t("statusShimmerPage") : t("statusCreatingCal");
         }
 
-        if (cfg.enableSkeleton) {
+        if (cfg.enableSkeleton && isLivePreview) {
             showLoadingProgress(30, t("loadingShimmer"));
             var skelCall0 = "renderSkeletonShimmerInDesign('" + escapedJson + "', 0)";
             csInterface.evalScript(skelCall0, function() {
