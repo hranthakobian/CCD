@@ -1,7 +1,7 @@
 {
   "id": "com.calendar.generator",
   "name": "Օրացույցի Ստեղծիչ",
-  "version": "1.2.0",
+  "version": "1.3.2",
   "main": "index.html",
   "manifestVersion": 5,
   "host": {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Օրացույցի Ստեղծիչ - Fast ExtendScript & UXP Backend for Adobe InDesign
  */
 
@@ -199,7 +199,7 @@ function getDocumentUnitAndSize() {
     try {
         var ctx = getInDesignContext();
         if (!ctx || !ctx.app || ctx.app.documents.length === 0) {
-            return '{"hasDoc":false,"unit":"mm","pageW":210,"pageH":297,"w":184.6,"h":271.6,"x":12.7,"y":12.7}';
+            return '{"hasDoc":false,"hasCalendar":false,"unit":"mm","pageW":210,"pageH":297,"w":184.6,"h":271.6,"x":12.7,"y":12.7}';
         }
         var doc = ctx.app.activeDocument;
         var unitCode = detectUnitCodeFromDoc(doc);
@@ -208,7 +208,15 @@ function getDocumentUnitAndSize() {
             : doc.pages.item(0);
         var box = getPageMarginBox(doc, activePage, unitCode, ctx);
 
-        return '{"hasDoc":true,"unit":"' + unitCode + '"' +
+        var hasCal = false;
+        try {
+            var calLayer = doc.layers.itemByName("Calendar_Generator");
+            if (calLayer && calLayer.isValid && calLayer.pageItems.length > 0) {
+                hasCal = true;
+            }
+        } catch (eCalCheck) {}
+
+        return '{"hasDoc":true,"hasCalendar":' + (hasCal ? "true" : "false") + ',"unit":"' + unitCode + '"' +
             ',"pageW":' + box.pageW +
             ',"pageH":' + box.pageH +
             ',"w":' + box.w +
@@ -216,7 +224,7 @@ function getDocumentUnitAndSize() {
             ',"x":' + box.x +
             ',"y":' + box.y + '}';
     } catch (err) {
-        return '{"hasDoc":false,"unit":"mm","pageW":210,"pageH":297,"w":184.6,"h":271.6,"x":12.7,"y":12.7}';
+        return '{"hasDoc":false,"hasCalendar":false,"unit":"mm","pageW":210,"pageH":297,"w":184.6,"h":271.6,"x":12.7,"y":12.7}';
     }
 }
 

@@ -3,7 +3,7 @@
 
     var csInterface = new CSInterface();
 
-    var PLUGIN_VERSION = "1.2.0";
+    var PLUGIN_VERSION = "1.3.0";
     var GITHUB_REPO = "hranthakobian/CCD";
     var GITHUB_RELEASES_API = "https://api.github.com/repos/" + GITHUB_REPO + "/releases/latest";
     var GITHUB_RELEASES_LIST_API = "https://api.github.com/repos/" + GITHUB_REPO + "/releases";
@@ -49,7 +49,7 @@
             refreshBtnTitle: "Թարմացնել InDesign-ում",
             liveActiveBtn: "Ուղիղ Նախադիտում՝ ՄԻԱՑՎԱԾ",
             liveInactiveBtn: "Ուղիղ Նախադիտում՝ ԱՆՋԱՏՎԱԾ",
-            livePreviewShort: "Ուղիղ Նախադիտում",
+            livePreviewShort: "Ուղիղ",
             genCalendarBtn: "Ստեղծել օրացույցը",
             genAllText: "Ստեղծել (12 էջ)",
             genSingleText: "Ստեղծել (1 էջ)",
@@ -67,7 +67,7 @@
             windowsMenu: "Պատուհաններ",
             windowsMenuTitle: "Պատուհաններ",
             restoreAllPanes: "Բոլորը",
-            paneScopeTitle: "Ծավալ եւ Շիմեր",
+            paneScopeTitle: "Ծավալ",
             statusAllOpened: "Բոլոր փեղկերը բացվեցին։",
             yearLabel: "Տարի",
             monthLabel: "Ամիս (1 ամսվա համար)",
@@ -199,7 +199,7 @@
             refreshBtnTitle: "Refresh in InDesign",
             liveActiveBtn: "Live Preview: ON",
             liveInactiveBtn: "Live Preview: OFF",
-            livePreviewShort: "Live Preview",
+            livePreviewShort: "Live",
             genCalendarBtn: "Generate Calendar",
             genAllText: "Generate (12 Pages)",
             genSingleText: "Generate (1 Page)",
@@ -217,7 +217,7 @@
             windowsMenu: "Windows",
             windowsMenuTitle: "Windows",
             restoreAllPanes: "All",
-            paneScopeTitle: "Scope & Shimmer",
+            paneScopeTitle: "Scope",
             statusAllOpened: "All panes restored.",
             yearLabel: "Year",
             monthLabel: "Month (for 1 page)",
@@ -387,14 +387,9 @@
             }
         }
 
-        var liveChk = byId("inDesignLivePreview");
-        var toggleBtn = byId("toggleLivePreviewBtn");
         var liveText = byId("liveBtnText");
-        if (toggleBtn && liveChk) {
-            toggleBtn.className = liveChk.checked ? "btn-action btn-live active" : "btn-action btn-live inactive";
-            if (liveText) {
-                liveText.textContent = t("livePreviewShort");
-            }
+        if (liveText) {
+            liveText.textContent = t("livePreviewShort");
         }
 
         updateAlignReadouts();
@@ -426,23 +421,25 @@
         var textEl = byId("startBtnText");
         if (!startBtn) return;
 
+        startBtn.classList.add("btn-action", "btn-start");
+
         if (isStarted) {
-            startBtn.className = "btn-action btn-start started";
+            startBtn.classList.add("started");
             startBtn.title = t("refreshBtnTitle");
             if (textEl) {
                 textEl.textContent = t("refreshText");
             }
             if (iconEl) {
-                iconEl.innerHTML = '<i class="hd-icon hd-icon-redo-arrow' + (rendering ? ' spinning' : '') + '"></i>';
+                iconEl.innerHTML = '<svg class="btn-svg-icon' + (rendering ? ' spinning' : '') + '" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15.36-6.36L21 8M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15.36 6.36L3 16"/></svg>';
             }
         } else {
-            startBtn.className = "btn-action btn-start";
+            startBtn.classList.remove("started");
             startBtn.title = t("startPreviewBtn");
             if (textEl) {
                 textEl.textContent = t("startPreviewText");
             }
             if (iconEl) {
-                iconEl.innerHTML = '<i class="hd-icon hd-icon-play"></i>';
+                iconEl.innerHTML = '<svg class="btn-svg-icon" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>';
             }
         }
     }
@@ -592,6 +589,15 @@
                     var wasConnected = inDesignConnected;
                     inDesignConnected = true;
 
+                    // If active document has no calendar items, ensure isStarted is false
+                    if (info.hasCalendar === false) {
+                        isStarted = false;
+                        updateStartButtonState(false);
+                    } else if (info.hasCalendar === true && !isStarted) {
+                        isStarted = true;
+                        updateStartButtonState(false);
+                    }
+
                     if (!wasConnected || docKey !== lastDocStateKey) {
                         lastDocStateKey = docKey;
                         currentUnit = info.unit;
@@ -615,43 +621,49 @@
                         }
                         updatePanelPreview();
                         var liveToggle = byId("inDesignLivePreview");
-                        if (triggerUpdate && liveToggle && liveToggle.checked) {
+                        // NEVER generate into InDesign unless the user clicked Start or Create (isStarted === true)!
+                        if (triggerUpdate && liveToggle && liveToggle.checked && isStarted) {
                             scheduleLiveInDesignUpdate();
                         }
                     }
                 } else {
                     inDesignConnected = false;
+                    isStarted = false;
+                    updateStartButtonState(false);
                 }
             } catch (e) {}
         });
     }
 
     function initInDesignAutoConnect() {
-        var liveToggle = byId("inDesignLivePreview");
-        checkAndAutoSyncInDesign(liveToggle && liveToggle.checked);
+        // Passive sync on startup: do NOT trigger calendar generation!
+        checkAndAutoSyncInDesign(false);
 
         try {
             csInterface.addEventListener("documentAfterActivate", function() {
                 usePageMargins = true;
-                var lt = byId("inDesignLivePreview");
-                checkAndAutoSyncInDesign(lt && lt.checked);
+                // Passive sync when switching documents: do NOT trigger generation on clean papers!
+                checkAndAutoSyncInDesign(false);
             });
             csInterface.addEventListener("documentAfterOpen", function() {
                 usePageMargins = true;
-                var lt = byId("inDesignLivePreview");
-                checkAndAutoSyncInDesign(lt && lt.checked);
+                isStarted = false;
+                updateStartButtonState(false);
+                checkAndAutoSyncInDesign(false);
             });
             csInterface.addEventListener("documentAfterNew", function() {
                 usePageMargins = true;
-                var lt = byId("inDesignLivePreview");
-                checkAndAutoSyncInDesign(lt && lt.checked);
+                // Opening a blank/clean sheet: MUST NOT create calendar!
+                isStarted = false;
+                updateStartButtonState(false);
+                checkAndAutoSyncInDesign(false);
             });
         } catch (eCepEvents) {}
 
         try {
             setInterval(function() {
-                var lt = byId("inDesignLivePreview");
-                checkAndAutoSyncInDesign(lt && lt.checked);
+                // Passive check if doc dimensions changed: only update if already started
+                checkAndAutoSyncInDesign(isStarted);
             }, 2500);
         } catch (eTimer) {}
     }
@@ -746,7 +758,7 @@
         return {
             mode: chosenMode,
             livePreview: byId("inDesignLivePreview") ? Boolean(byId("inDesignLivePreview").checked) : true,
-            enableSkeleton: byId("enableSkeletonCheckbox") ? Boolean(byId("enableSkeletonCheckbox").checked) : true,
+            enableSkeleton: byId("enableSkeletonCheckbox") ? Boolean(byId("enableSkeletonCheckbox").checked) : false,
             year: Math.round(readNumber("yearInput", 2026, 1000, 9999)),
             month: Math.round(readNumber("monthSelect", 0, 0, 11)),
             lang: byId("langSelect") ? byId("langSelect").value : "hy",
@@ -1040,6 +1052,9 @@
     }
 
     function executeInDesignGeneration(mode, isLivePreview) {
+        if (isLivePreview && !isStarted) {
+            return;
+        }
         var statusMsg = byId("statusMsg");
         if (isRendering) {
             pendingRenderMode = mode;
@@ -1085,6 +1100,10 @@
 
     function scheduleLiveInDesignUpdate() {
         updatePanelPreview();
+        // Do NOT touch InDesign until the user clicks Start or Create!
+        if (!isStarted) {
+            return;
+        }
         var liveToggle = byId("inDesignLivePreview");
         if (!liveToggle || !liveToggle.checked) {
             return;
@@ -1672,7 +1691,7 @@
        ========================================================================== */
     var PANE_DEFINITIONS = [
         { id: "pane-preview", titleKey: "sec5PreviewTitle", defaultTitle: "Նախադիտում եւ Տոների Ցանկ" },
-        { id: "pane-scope", titleKey: "paneScopeTitle", defaultTitle: "Ծավալ եւ Շիմեր" },
+        { id: "pane-scope", titleKey: "paneScopeTitle", defaultTitle: "Ծավալ" },
         { id: "pane-general", titleKey: "sec1Title", defaultTitle: "Հիմնական, Լեզուներ, Վերնագրեր եւ Տոներ" },
         { id: "pane-dimensions", titleKey: "sec2Title", defaultTitle: "Չափեր, Միավոր, Padding, Margin եւ Դիրք" },
         { id: "pane-typography", titleKey: "sec3Title", defaultTitle: "Տառատեսակներ եւ Տառաչափ (Typography)" },
@@ -1719,34 +1738,235 @@
             });
         } catch (eClosed) {}
 
-        // 4. Wire events on all panes
-        var allPanes = container.querySelectorAll(".pane-card");
-        for (var i = 0; i < allPanes.length; i++) {
+        // 4. Smooth Swap and Reorder Functions
+        function swapPanes(paneA, paneB) {
+            if (!paneA || !paneB || paneA === paneB) return;
+            var visiblePanes = Array.from(container.querySelectorAll(".pane-card:not(.is-closed)"));
+            var rectMap = new Map();
+            visiblePanes.forEach(function(p) {
+                rectMap.set(p, p.getBoundingClientRect());
+            });
+
+            // Perform DOM swap
+            var nextA = paneA.nextSibling;
+            if (nextA === paneB) {
+                container.insertBefore(paneB, paneA);
+            } else if (paneB.nextSibling === paneA) {
+                container.insertBefore(paneA, paneB);
+            } else {
+                var nextB = paneB.nextSibling;
+                container.insertBefore(paneB, nextA);
+                container.insertBefore(paneA, nextB);
+            }
+
+            // FLIP Animation
+            visiblePanes.forEach(function(p) {
+                var first = rectMap.get(p);
+                var last = p.getBoundingClientRect();
+                var deltaY = first.top - last.top;
+                if (Math.abs(deltaY) > 0.5) {
+                    p.style.transition = "none";
+                    p.style.transform = "translateY(" + deltaY + "px)";
+                    void p.offsetHeight; // force reflow
+                    p.style.transition = "transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease";
+                    p.style.transform = "translateY(0)";
+                    setTimeout(function() {
+                        p.style.transition = "";
+                        p.style.transform = "";
+                    }, 360);
+                }
+            });
+
+            savePanesOrder();
+        }
+
+        // Wire move-up and move-down buttons
+        var allPanesList = container.querySelectorAll(".pane-card");
+        for (var pIdx = 0; pIdx < allPanesList.length; pIdx++) {
             (function(pane) {
-                var handle = pane.querySelector(".pane-drag-handle");
-                if (handle) {
-                    handle.addEventListener("mousedown", function() {
-                        pane.draggable = true;
-                    });
-                    handle.addEventListener("mouseup", function() {
-                        pane.draggable = false;
+                var upBtn = pane.querySelector(".pane-move-up-btn");
+                if (upBtn) {
+                    upBtn.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        var visible = Array.from(container.querySelectorAll(".pane-card:not(.is-closed)"));
+                        var idx = visible.indexOf(pane);
+                        if (idx > 0) {
+                            swapPanes(pane, visible[idx - 1]);
+                        }
                     });
                 }
 
-                pane.addEventListener("dragstart", function(e) {
-                    pane.classList.add("is-dragging");
-                    if (e.dataTransfer) {
-                        e.dataTransfer.effectAllowed = "move";
-                        e.dataTransfer.setData("text/plain", pane.id);
+                var downBtn = pane.querySelector(".pane-move-down-btn");
+                if (downBtn) {
+                    downBtn.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        var visible = Array.from(container.querySelectorAll(".pane-card:not(.is-closed)"));
+                        var idx = visible.indexOf(pane);
+                        if (idx >= 0 && idx < visible.length - 1) {
+                            swapPanes(pane, visible[idx + 1]);
+                        }
+                    });
+                }
+            })(allPanesList[pIdx]);
+        }
+
+        // Robust & Smooth Drag-and-Drop Reordering with FLIP animation and Drop Indicator
+        var isDragging = false;
+        var draggedPane = null;
+        var startMouseY = 0;
+        var currentDeltaY = 0;
+        var targetSlotBefore = null;
+        var indicator = byId("paneDropIndicator");
+
+        container.addEventListener("mousedown", function(e) {
+            var handle = e.target.closest(".pane-drag-handle");
+            var header = e.target.closest(".pane-header");
+            if (e.target.closest(".pane-header-actions") || e.target.closest(".pane-collapse-btn") || e.target.closest("button") || e.target.closest("input") || e.target.closest("hd-slider") || e.target.closest("select")) {
+                return;
+            }
+            if (!handle && !header) return;
+
+            var pane = e.target.closest(".pane-card");
+            if (!pane || pane.parentNode !== container) return;
+            if (e.button !== 0) return;
+
+            e.preventDefault();
+            draggedPane = pane;
+            startMouseY = e.clientY;
+            currentDeltaY = 0;
+            isDragging = false;
+            targetSlotBefore = null;
+
+            function onMouseMove(ev) {
+                var dy = ev.clientY - startMouseY;
+                currentDeltaY = dy;
+
+                if (!isDragging && Math.abs(dy) > 3) {
+                    isDragging = true;
+                    draggedPane.classList.add("is-dragging");
+                    document.body.style.cursor = "grabbing";
+                }
+                if (!isDragging) return;
+
+                // Move dragged pane smoothly with the mouse
+                draggedPane.style.transform = "translateY(" + dy + "px) scale(1.02)";
+
+                // Find target drop slot among visible siblings (excluding draggedPane and indicator)
+                var visibleSiblings = Array.from(container.querySelectorAll(".pane-card:not(.is-closed)")).filter(function(p) {
+                    return p !== draggedPane;
+                });
+
+                var afterEl = null;
+                for (var s = 0; s < visibleSiblings.length; s++) {
+                    var sib = visibleSiblings[s];
+                    var box = sib.getBoundingClientRect();
+                    var midY = box.top + box.height / 2;
+                    if (ev.clientY < midY) {
+                        afterEl = sib;
+                        break;
                     }
-                });
+                }
+                targetSlotBefore = afterEl;
 
-                pane.addEventListener("dragend", function() {
-                    pane.draggable = false;
-                    pane.classList.remove("is-dragging");
-                    savePanesOrder();
-                });
+                // Position and show the glowing drop indicator between panes
+                if (indicator) {
+                    if (targetSlotBefore) {
+                        if (indicator.nextElementSibling !== targetSlotBefore) {
+                            container.insertBefore(indicator, targetSlotBefore);
+                        }
+                    } else {
+                        if (container.lastElementChild !== indicator) {
+                            container.appendChild(indicator);
+                        }
+                    }
+                    indicator.classList.remove("hidden");
+                }
+            }
 
+            function onMouseUp() {
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
+                document.body.style.cursor = "";
+
+                if (indicator) {
+                    indicator.classList.add("hidden");
+                }
+
+                if (!isDragging) {
+                    if (draggedPane) {
+                        draggedPane.classList.remove("is-dragging");
+                        draggedPane.style.transform = "";
+                        draggedPane = null;
+                    }
+                    return;
+                }
+
+                if (draggedPane) {
+                    // Record pre-DOM change positions of all visible panes
+                    var visiblePanes = Array.from(container.querySelectorAll(".pane-card:not(.is-closed)"));
+                    var firstPositions = new Map();
+                    visiblePanes.forEach(function(p) {
+                        firstPositions.set(p, p.getBoundingClientRect().top);
+                    });
+
+                    // Perform DOM repositioning to target slot
+                    if (targetSlotBefore) {
+                        container.insertBefore(draggedPane, targetSlotBefore);
+                    } else {
+                        container.appendChild(draggedPane);
+                    }
+
+                    // Invert: calculate deltaY for FLIP animation
+                    visiblePanes.forEach(function(p) {
+                        var firstTop = firstPositions.get(p);
+                        var lastTop = p.getBoundingClientRect().top;
+                        var dy = firstTop - lastTop;
+                        if (p === draggedPane) {
+                            // Adjust for cursor translation during drag
+                            dy = (firstTop + currentDeltaY) - lastTop;
+                        }
+                        if (Math.abs(dy) > 0.5) {
+                            p.style.transition = "none";
+                            p.style.transform = "translateY(" + dy + "px)";
+                        } else {
+                            p.style.transform = "";
+                        }
+                    });
+
+                    // Force reflow
+                    void container.offsetHeight;
+
+                    // Play: animate smoothly to final resting positions
+                    visiblePanes.forEach(function(p) {
+                        p.style.transition = "transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease";
+                        p.style.transform = "translateY(0)";
+                    });
+
+                    var animatingPane = draggedPane;
+                    setTimeout(function() {
+                        visiblePanes.forEach(function(p) {
+                            p.style.transition = "";
+                            p.style.transform = "";
+                        });
+                        if (animatingPane) {
+                            animatingPane.classList.remove("is-dragging");
+                        }
+                        savePanesOrder();
+                    }, 340);
+
+                    draggedPane = null;
+                    isDragging = false;
+                }
+            }
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+        });
+
+        // Wire collapse and close buttons on each pane
+        var allPanes = container.querySelectorAll(".pane-card");
+        for (var i = 0; i < allPanes.length; i++) {
+            (function(pane) {
                 // Collapse button
                 var collapseBtn = pane.querySelector(".pane-collapse-btn");
                 if (collapseBtn) {
@@ -1775,19 +1995,6 @@
                 }
             })(allPanes[i]);
         }
-
-        container.addEventListener("dragover", function(e) {
-            e.preventDefault();
-            var draggingEl = container.querySelector(".is-dragging");
-            if (!draggingEl) return;
-
-            var afterElement = getDragAfterElement(container, e.clientY);
-            if (afterElement == null) {
-                container.appendChild(draggingEl);
-            } else if (afterElement !== draggingEl) {
-                container.insertBefore(draggingEl, afterElement);
-            }
-        });
 
         // 5. Wire Windows Dropdown
         initWindowsDropdown();
@@ -1821,11 +2028,68 @@
     function togglePaneCollapse(paneId) {
         var pane = byId(paneId);
         if (!pane) return;
-        pane.classList.toggle("collapsed");
+        var body = pane.querySelector(".pane-body");
+        if (!body) {
+            pane.classList.toggle("collapsed");
+            return;
+        }
+
+        var isCollapsing = !pane.classList.contains("collapsed");
+        pane.classList.add("is-animating");
+
+        if (isCollapsing) {
+            var startH = body.scrollHeight;
+            body.style.height = startH + "px";
+            body.style.opacity = "1";
+            body.style.paddingTop = "8px";
+            body.style.paddingBottom = "8px";
+            void body.offsetHeight; // force reflow
+
+            body.style.transition = "height 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease, padding 0.3s cubic-bezier(0.22, 1, 0.36, 1)";
+            body.style.height = "0px";
+            body.style.opacity = "0";
+            body.style.paddingTop = "0px";
+            body.style.paddingBottom = "0px";
+            body.style.pointerEvents = "none";
+
+            setTimeout(function() {
+                pane.classList.add("collapsed");
+                pane.classList.remove("is-animating");
+                body.style.height = "";
+                body.style.opacity = "";
+                body.style.paddingTop = "";
+                body.style.paddingBottom = "";
+                body.style.transition = "";
+                body.style.pointerEvents = "";
+            }, 310);
+        } else {
+            pane.classList.remove("collapsed");
+            body.style.height = "0px";
+            body.style.opacity = "0";
+            body.style.paddingTop = "0px";
+            body.style.paddingBottom = "0px";
+            void body.offsetHeight; // force reflow
+
+            var targetH = body.scrollHeight;
+            body.style.transition = "height 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease, padding 0.32s cubic-bezier(0.22, 1, 0.36, 1)";
+            body.style.height = targetH + "px";
+            body.style.opacity = "1";
+            body.style.paddingTop = "8px";
+            body.style.paddingBottom = "8px";
+
+            setTimeout(function() {
+                pane.classList.remove("is-animating");
+                body.style.height = "";
+                body.style.opacity = "";
+                body.style.paddingTop = "";
+                body.style.paddingBottom = "";
+                body.style.transition = "";
+            }, 330);
+        }
 
         try {
             var collapsedMap = JSON.parse(localStorage.getItem("ccd_panes_collapsed") || "{}");
-            collapsedMap[paneId] = pane.classList.contains("collapsed");
+            collapsedMap[paneId] = isCollapsing;
             localStorage.setItem("ccd_panes_collapsed", JSON.stringify(collapsedMap));
         } catch (e) {}
     }
@@ -1834,17 +2098,16 @@
         var pane = byId(paneId);
         if (!pane || pane.classList.contains("is-closed")) return;
 
-        var winBtn = byId("windowsDropdownBtn");
+        if (animate !== false) {
+            pane.style.overflow = "hidden";
+            pane.style.maxHeight = pane.offsetHeight + "px";
+            void pane.offsetHeight;
 
-        if (animate !== false && winBtn) {
-            var paneRect = pane.getBoundingClientRect();
-            var btnRect = winBtn.getBoundingClientRect();
-            var dx = (btnRect.left + btnRect.width / 2) - (paneRect.left + paneRect.width / 2);
-            var dy = (btnRect.top + btnRect.height / 2) - (paneRect.top + paneRect.height / 2);
-
-            pane.style.transition = "transform 0.38s cubic-bezier(0.2, 0.8, 0.25, 1), opacity 0.32s ease-in";
-            pane.style.transform = "translate(" + dx + "px, " + dy + "px) scale(0.06)";
+            pane.style.transition = "max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.32s ease";
             pane.style.opacity = "0";
+            pane.style.transform = "scale(0.92) translateY(-8px)";
+            pane.style.maxHeight = "0px";
+            pane.style.marginBottom = "0px";
             pane.style.pointerEvents = "none";
 
             setTimeout(function() {
@@ -1852,13 +2115,16 @@
                 pane.style.display = "none";
                 pane.style.transform = "";
                 pane.style.opacity = "";
+                pane.style.maxHeight = "";
+                pane.style.marginBottom = "";
                 pane.style.transition = "";
+                pane.style.overflow = "";
                 pane.style.pointerEvents = "";
 
                 triggerWindowsButtonPulse();
                 updateWindowsMenuUI();
                 saveClosedPanesState();
-            }, 360);
+            }, 330);
         } else {
             pane.classList.add("is-closed");
             pane.style.display = "none";
@@ -1875,20 +2141,25 @@
         pane.style.display = "";
 
         if (animate !== false) {
-            pane.style.transition = "none";
+            pane.style.overflow = "hidden";
             pane.style.opacity = "0";
-            pane.style.transform = "translateY(-14px) scale(0.96)";
+            pane.style.transform = "scale(0.94) translateY(-10px)";
+            var naturalH = pane.scrollHeight;
+            pane.style.maxHeight = "0px";
             void pane.offsetHeight;
 
-            pane.style.transition = "transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease-out";
+            pane.style.transition = "max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.35s ease";
             pane.style.opacity = "1";
-            pane.style.transform = "translateY(0) scale(1)";
+            pane.style.transform = "scale(1) translateY(0)";
+            pane.style.maxHeight = (naturalH + 20) + "px";
 
             setTimeout(function() {
                 pane.style.transition = "";
                 pane.style.transform = "";
                 pane.style.opacity = "";
-            }, 340);
+                pane.style.maxHeight = "";
+                pane.style.overflow = "";
+            }, 360);
         }
 
         updateWindowsMenuUI();
@@ -1993,10 +2264,12 @@
             item.className = "windows-dropdown-item" + (isClosed ? " is-closed" : "");
             item.setAttribute("data-pane-id", def.id);
 
-            var iconClass = isClosed ? "hd-icon hd-icon-Close" : "hd-icon hd-icon-eye";
+            var iconSvg = isClosed
+                ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="pane-status-svg"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+                : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pane-status-svg"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
             var statusLabel = isClosed ? (currentUiLang === "en" ? "Closed" : "Փակ") : (currentUiLang === "en" ? "Open" : "Բաց");
 
-            item.innerHTML = '<i class="' + iconClass + ' pane-status-icon"></i>' +
+            item.innerHTML = '<span class="pane-status-icon-wrap">' + iconSvg + '</span>' +
                 '<span class="windows-item-title">' + titleText + '</span>' +
                 '<span class="windows-item-status">' + statusLabel + '</span>';
 
@@ -2096,14 +2369,8 @@
                         liveRenderTimer = null;
                     }
                     var liveChk = byId("inDesignLivePreview");
-                    var toggleBtn = byId("toggleLivePreviewBtn");
-                    var liveText = byId("liveBtnText");
                     if (liveChk && !liveChk.checked) {
                         liveChk.checked = true;
-                        if (toggleBtn) {
-                            toggleBtn.className = "btn-action btn-live active";
-                            if (liveText) liveText.textContent = t("livePreviewShort");
-                        }
                     }
                     var modeEl = byId("previewModeSelect");
                     var chosenMode = modeEl ? modeEl.value : "all";
@@ -2118,22 +2385,18 @@
                 });
             }
 
-            var toggleBtn = byId("toggleLivePreviewBtn");
             var liveChk = byId("inDesignLivePreview");
-            var liveText = byId("liveBtnText");
-            if (toggleBtn && liveChk) {
-                toggleBtn.addEventListener("click", function() {
-                    liveChk.checked = !liveChk.checked;
+            if (liveChk) {
+                liveChk.addEventListener("change", function() {
                     if (liveChk.checked) {
-                        toggleBtn.className = "btn-action btn-live active";
-                        if (liveText) liveText.textContent = t("livePreviewShort");
-                        scheduleLiveInDesignUpdate();
+                        if (isStarted) {
+                            scheduleLiveInDesignUpdate();
+                        }
                     } else {
                         if (liveRenderTimer) {
                             clearTimeout(liveRenderTimer);
+                            liveRenderTimer = null;
                         }
-                        toggleBtn.className = "btn-action btn-live inactive";
-                        if (liveText) liveText.textContent = t("livePreviewShort");
                         if (byId("loadingContainer")) {
                             byId("loadingContainer").className = "loading-container hidden";
                         }
@@ -2144,6 +2407,8 @@
             var genCalBtn = byId("generateCalendarBtn");
             if (genCalBtn) {
                 genCalBtn.addEventListener("click", function() {
+                    isStarted = true;
+                    updateStartButtonState(true);
                     var modeEl = byId("previewModeSelect");
                     var chosenMode = modeEl ? modeEl.value : "all";
                     updatePanelPreview();
@@ -2165,10 +2430,6 @@
                     var liveChk = byId("inDesignLivePreview");
                     if (liveChk) {
                         liveChk.checked = false;
-                    }
-                    var toggleBtn = byId("toggleLivePreviewBtn");
-                    if (toggleBtn) {
-                        toggleBtn.className = "btn-action btn-live inactive";
                     }
 
                     var statusMsg = byId("statusMsg");
@@ -2257,6 +2518,8 @@
             var genAll = byId("generateAllBtn");
             if (genAll) {
                 genAll.addEventListener("click", function() {
+                    isStarted = true;
+                    updateStartButtonState(true);
                     if (byId("previewModeSelect")) byId("previewModeSelect").value = "all";
                     updateScopeUI();
                     updatePanelPreview();
@@ -2267,6 +2530,8 @@
             var genSingle = byId("generateSingleBtn");
             if (genSingle) {
                 genSingle.addEventListener("click", function() {
+                    isStarted = true;
+                    updateStartButtonState(true);
                     if (byId("previewModeSelect")) byId("previewModeSelect").value = "single";
                     updateScopeUI();
                     updatePanelPreview();

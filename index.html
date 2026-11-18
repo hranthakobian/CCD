@@ -7,6 +7,7 @@
     <!-- Hakobian Libraries -->
     <link rel="stylesheet" href="https://api.hakobian.am/libs/v1/icons/style.css">
     <link rel="stylesheet" href="https://api.hakobian.am/libs/v1/components/style.css">
+    <link rel="stylesheet" href="css/icons.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="dark">
@@ -22,10 +23,14 @@
                         <!-- Windows Dropdown Menu (Պատուհաններ - լեզուների կողքին) -->
                         <div class="windows-dropdown-wrap" id="windowsDropdownWrap">
                             <div role="button" tabindex="0" id="windowsDropdownBtn" class="btn-windows-dropdown" title="Պատուհաններ / Windows" aria-haspopup="true" aria-expanded="false">
-                                <i class="hd-icon hd-icon-dashboard"></i>
+                                <svg class="windows-menu-icon" viewBox="0 0 24 24" width="13" height="13">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 3 13 L 11 13 L 11 3 L 3 3 L 3 13 Z M 3 21 L 11 21 L 11 15 L 3 15 L 3 21 Z M 13 21 L 21 21 L 21 11 L 13 11 L 13 21 Z M 13 3 L 13 9 L 21 9 L 21 3 L 13 3 Z"/>
+                                </svg>
                                 <span class="windows-btn-label" data-i18n="windowsMenu">Պատուհաններ</span>
                                 <span id="windowsIndicatorBadge" class="windows-indicator-badge hidden">0</span>
-                                <i class="hd-icon hd-icon-Chevrolt-Arrow-Bottom windows-caret"></i>
+                                <svg class="windows-caret-svg" viewBox="0 0 24 24" width="12" height="12">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 16.59 8.59 L 12 13.17 L 7.41 8.59 L 6 10 L 12 16 L 18 10 Z"/>
+                                </svg>
                             </div>
                             <div id="windowsDropdownMenu" class="windows-dropdown-menu hidden" role="menu">
                                 <div class="windows-dropdown-header">
@@ -37,7 +42,10 @@
                         </div>
 
                         <div role="button" tabindex="0" id="checkUpdateBtn" class="btn-update-check" title="Ստուգել թարմացումները GitHub-ում">
-                            <span id="pluginVersionLabel">v1.2.0</span> <i class="hd-icon hd-icon-redo-arrow" style="font-size:10px; margin-left:3px;"></i>
+                            <span id="pluginVersionLabel">v1.3.0</span>
+                            <svg class="update-check-svg" viewBox="0 0 24 24" width="11" height="11" style="margin-left:3px;">
+                                <path class="theme-icon-shape" fill="#FFFFFF" d="M 17.65 6.35 C 16.2 4.9 14.21 4 12 4 C 7.58 4 4.01 7.58 4.01 12 C 4.01 16.42 7.58 20 12 20 C 15.73 20 18.84 17.45 19.73 14 L 17.65 14 C 16.83 16.33 14.61 18 12 18 C 8.69 18 6 15.31 6 12 C 6 8.69 8.69 6 12 6 C 13.66 6 15.14 6.69 16.22 7.78 L 13 11 L 20 11 L 20 4 L 17.65 6.35 Z"/>
+                            </svg>
                         </div>
                         <div class="lang-switch-group" role="group" aria-label="UI Language">
                             <div role="button" tabindex="0" id="uiLangHyBtn" class="lang-btn active" data-ui-lang="hy">ՀԱՅ</div>
@@ -50,7 +58,11 @@
                 <div id="updateBanner" class="update-banner hidden">
                     <div class="update-banner-top">
                         <span id="updateBannerTitle" class="update-banner-title">Հասանելի է նոր թարմացում</span>
-                        <div role="button" tabindex="0" id="dismissUpdateBtn" class="update-dismiss-btn" title="Փակել">×</div>
+                        <div role="button" tabindex="0" id="dismissUpdateBtn" class="update-dismiss-btn" title="Փակել">
+                            <svg viewBox="0 0 24 24" width="13" height="13">
+                                <path fill="#FFFFFF" d="M 19 6.41 L 17.59 5 L 12 10.59 L 6.41 5 L 5 6.41 L 10.59 12 L 5 17.59 L 6.41 19 L 12 13.41 L 17.59 19 L 19 17.59 L 13.41 12 Z"/>
+                            </svg>
+                        </div>
                     </div>
                     <div id="updateBannerNotes" class="update-banner-notes"></div>
                     <div id="updateActionRow" class="update-action-row">
@@ -62,22 +74,47 @@
                 <!-- PANES CONTAINER (Reorderable, Collapsible, Closeable) -->
                 <div class="panes-container" id="panesContainer">
 
+                    <!-- Visual Drop Indicator between panes during drag -->
+                    <div id="paneDropIndicator" class="pane-drop-indicator hidden" aria-hidden="true">
+                        <div class="indicator-dot left-dot"></div>
+                        <div class="indicator-line"></div>
+                        <div class="indicator-dot right-dot"></div>
+                    </div>
+
                     <!-- PANE 1: Mini Preview & Holiday Summary -->
                     <div class="pane-card preview-section" id="pane-preview" data-pane-id="pane-preview">
                         <div class="pane-header">
-                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder" draggable="false">
-                                <i class="hd-icon hd-icon-three-dots-horizontal"></i>
+                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder">
+                                <svg class="pane-drag-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <circle class="theme-icon-shape" cx="5" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="12" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="19" cy="12" r="2.2" fill="#FFFFFF"/>
+                                </svg>
+                            </div>
+                            <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել (Collapse/Expand)" aria-label="Collapse">
+                                <svg class="pane-chevron" viewBox="0 0 24 24" width="14" height="14">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 16.59 8.59 L 12 13.17 L 7.41 8.59 L 6 10 L 12 16 L 18 10 Z"/>
+                                </svg>
                             </div>
                             <div class="pane-title-wrap">
                                 <span class="pane-title preview-label" data-i18n="sec5PreviewTitle">Նախադիտում եւ Տոների Ցանկ</span>
                                 <span id="previewScopeBadge" class="preview-scope-badge">12 էջ</span>
                             </div>
                             <div class="pane-header-actions">
-                                <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել (Collapse/Expand)" aria-label="Collapse">
-                                    <i class="hd-icon hd-icon-Chevrolt-Arrow-Bottom pane-chevron"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-up-btn" title="Տեղափոխել վերև / Move Up" aria-label="Move Up">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 4 L 5 11 L 6.41 12.41 L 11 7.83 L 11 20 L 13 20 L 13 7.83 L 17.59 12.41 L 19 11 Z"/>
+                                    </svg>
+                                </div>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-down-btn" title="Տեղափոխել ներքև / Move Down" aria-label="Move Down">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 20 L 19 13 L 17.59 11.59 L 13 16.17 L 13 4 L 11 4 L 11 16.17 L 6.41 11.59 L 5 13 Z"/>
+                                    </svg>
                                 </div>
                                 <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել (Close)" aria-label="Close">
-                                    <i class="hd-icon hd-icon-Close"></i>
+                                    <svg class="pane-close-icon" viewBox="0 0 24 24" width="14" height="14">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 19 6.41 L 17.59 5 L 12 10.59 L 6.41 5 L 5 6.41 L 10.59 12 L 5 17.59 L 6.41 19 L 12 13.41 L 17.59 19 L 19 17.59 L 13.41 12 Z"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -88,21 +125,39 @@
                         </div>
                     </div>
 
-                    <!-- PANE 2: Scope & Skeleton Controls Card -->
+                    <!-- PANE 2: Scope Controls Card -->
                     <div class="pane-card section-card scope-card" id="pane-scope" data-pane-id="pane-scope">
                         <div class="pane-header">
-                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder" draggable="false">
-                                <i class="hd-icon hd-icon-three-dots-horizontal"></i>
+                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder">
+                                <svg class="pane-drag-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <circle class="theme-icon-shape" cx="5" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="12" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="19" cy="12" r="2.2" fill="#FFFFFF"/>
+                                </svg>
+                            </div>
+                            <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել (Collapse/Expand)" aria-label="Collapse">
+                                <svg class="pane-chevron" viewBox="0 0 24 24" width="14" height="14">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 16.59 8.59 L 12 13.17 L 7.41 8.59 L 6 10 L 12 16 L 18 10 Z"/>
+                                </svg>
                             </div>
                             <div class="pane-title-wrap">
-                                <span class="pane-title" data-i18n="paneScopeTitle">Ծավալ եւ Շիմեր</span>
+                                <span class="pane-title" data-i18n="paneScopeTitle">Ծավալ</span>
                             </div>
                             <div class="pane-header-actions">
-                                <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել" aria-label="Collapse">
-                                    <i class="hd-icon hd-icon-Chevrolt-Arrow-Bottom pane-chevron"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-up-btn" title="Տեղափոխել վերև / Move Up" aria-label="Move Up">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 4 L 5 11 L 6.41 12.41 L 11 7.83 L 11 20 L 13 20 L 13 7.83 L 17.59 12.41 L 19 11 Z"/>
+                                    </svg>
                                 </div>
-                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել" aria-label="Close">
-                                    <i class="hd-icon hd-icon-Close"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-down-btn" title="Տեղափոխել ներքև / Move Down" aria-label="Move Down">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 20 L 19 13 L 17.59 11.59 L 13 16.17 L 13 4 L 11 4 L 11 16.17 L 6.41 11.59 L 5 13 Z"/>
+                                    </svg>
+                                </div>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել (Close)" aria-label="Close">
+                                    <svg class="pane-close-icon" viewBox="0 0 24 24" width="14" height="14">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 19 6.41 L 17.59 5 L 12 10.59 L 6.41 5 L 5 6.41 L 10.59 12 L 5 17.59 L 6.41 19 L 12 13.41 L 17.59 19 L 19 17.59 L 13.41 12 Z"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -116,29 +171,42 @@
                                     </select>
                                 </div>
                             </div>
-
-                            <div class="checkbox-row" data-check="enableSkeletonCheckbox">
-                                <input type="checkbox" id="enableSkeletonCheckbox" checked>
-                                <div class="checkbox-text" data-i18n="skeletonToggleLabel">Սկելետոն շիմեր անիմացիա InDesign-ի էջերում</div>
-                            </div>
                         </div>
                     </div>
 
                     <!-- PANE 3: General Settings, Languages, Headers, Captions & Holidays -->
                     <div class="pane-card section-card" id="pane-general" data-pane-id="pane-general">
                         <div class="pane-header">
-                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder" draggable="false">
-                                <i class="hd-icon hd-icon-three-dots-horizontal"></i>
+                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder">
+                                <svg class="pane-drag-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <circle class="theme-icon-shape" cx="5" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="12" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="19" cy="12" r="2.2" fill="#FFFFFF"/>
+                                </svg>
+                            </div>
+                            <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել (Collapse/Expand)" aria-label="Collapse">
+                                <svg class="pane-chevron" viewBox="0 0 24 24" width="14" height="14">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 16.59 8.59 L 12 13.17 L 7.41 8.59 L 6 10 L 12 16 L 18 10 Z"/>
+                                </svg>
                             </div>
                             <div class="pane-title-wrap">
                                 <span class="pane-title" data-i18n="sec1Title">Հիմնական, Լեզուներ, Վերնագրեր եւ Տոներ</span>
                             </div>
                             <div class="pane-header-actions">
-                                <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել" aria-label="Collapse">
-                                    <i class="hd-icon hd-icon-Chevrolt-Arrow-Bottom pane-chevron"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-up-btn" title="Տեղափոխել վերև / Move Up" aria-label="Move Up">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 4 L 5 11 L 6.41 12.41 L 11 7.83 L 11 20 L 13 20 L 13 7.83 L 17.59 12.41 L 19 11 Z"/>
+                                    </svg>
                                 </div>
-                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել" aria-label="Close">
-                                    <i class="hd-icon hd-icon-Close"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-down-btn" title="Տեղափոխել ներքև / Move Down" aria-label="Move Down">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 20 L 19 13 L 17.59 11.59 L 13 16.17 L 13 4 L 11 4 L 11 16.17 L 6.41 11.59 L 5 13 Z"/>
+                                    </svg>
+                                </div>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել (Close)" aria-label="Close">
+                                    <svg class="pane-close-icon" viewBox="0 0 24 24" width="14" height="14">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 19 6.41 L 17.59 5 L 12 10.59 L 6.41 5 L 5 6.41 L 10.59 12 L 5 17.59 L 6.41 19 L 12 13.41 L 17.59 19 L 19 17.59 L 13.41 12 Z"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -249,18 +317,36 @@
                     <!-- PANE 4: Table Dimensions, Units, Cell Padding, Margin & 9-Point Alignment -->
                     <div class="pane-card section-card" id="pane-dimensions" data-pane-id="pane-dimensions">
                         <div class="pane-header">
-                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder" draggable="false">
-                                <i class="hd-icon hd-icon-three-dots-horizontal"></i>
+                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder">
+                                <svg class="pane-drag-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <circle class="theme-icon-shape" cx="5" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="12" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="19" cy="12" r="2.2" fill="#FFFFFF"/>
+                                </svg>
+                            </div>
+                            <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել (Collapse/Expand)" aria-label="Collapse">
+                                <svg class="pane-chevron" viewBox="0 0 24 24" width="14" height="14">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 16.59 8.59 L 12 13.17 L 7.41 8.59 L 6 10 L 12 16 L 18 10 Z"/>
+                                </svg>
                             </div>
                             <div class="pane-title-wrap">
                                 <span class="pane-title" data-i18n="sec2Title">Չափեր, Միավոր, Padding, Margin եւ Դիրք</span>
                             </div>
                             <div class="pane-header-actions">
-                                <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել" aria-label="Collapse">
-                                    <i class="hd-icon hd-icon-Chevrolt-Arrow-Bottom pane-chevron"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-up-btn" title="Տեղափոխել վերև / Move Up" aria-label="Move Up">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 4 L 5 11 L 6.41 12.41 L 11 7.83 L 11 20 L 13 20 L 13 7.83 L 17.59 12.41 L 19 11 Z"/>
+                                    </svg>
                                 </div>
-                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել" aria-label="Close">
-                                    <i class="hd-icon hd-icon-Close"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-down-btn" title="Տեղափոխել ներքև / Move Down" aria-label="Move Down">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 20 L 19 13 L 17.59 11.59 L 13 16.17 L 13 4 L 11 4 L 11 16.17 L 6.41 11.59 L 5 13 Z"/>
+                                    </svg>
+                                </div>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել (Close)" aria-label="Close">
+                                    <svg class="pane-close-icon" viewBox="0 0 24 24" width="14" height="14">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 19 6.41 L 17.59 5 L 12 10.59 L 6.41 5 L 5 6.41 L 10.59 12 L 5 17.59 L 6.41 19 L 12 13.41 L 17.59 19 L 19 17.59 L 13.41 12 Z"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -278,8 +364,10 @@
                                 </div>
                                 <div class="form-group half" style="justify-content: flex-end;">
                                     <label>&nbsp;</label>
-                                    <hd-button id="syncDocSettingsBtn" class="btn-mini" data-color="#1B365D" data-height="24px" data-i18n="syncPageBtn">
-                                        <i class="hd-icon hd-icon-redo-arrow" style="font-size:10px; margin-right:3px;"></i> Վերցնել էջից (Auto)
+                                    <hd-button id="syncDocSettingsBtn" class="btn-mini" data-color="#1B365D" data-height="24px">
+                                        <svg viewBox="0 0 24 24" width="12" height="12" style="margin-right:3px; vertical-align:middle; display:inline-block;">
+                                            <path class="theme-icon-shape" fill="#FFFFFF" d="M 17.65 6.35 C 16.2 4.9 14.21 4 12 4 C 7.58 4 4.01 7.58 4.01 12 C 4.01 16.42 7.58 20 12 20 C 15.73 20 18.84 17.45 19.73 14 L 17.65 14 C 16.83 16.33 14.61 18 12 18 C 8.69 18 6 15.31 6 12 C 6 8.69 8.69 6 12 6 C 13.66 6 15.14 6.69 16.22 7.78 L 13 11 L 20 11 L 20 4 L 17.65 6.35 Z"/>
+                                        </svg><span data-i18n="syncPageBtn">Վերցնել էջից (Auto)</span>
                                     </hd-button>
                                 </div>
                             </div>
@@ -358,18 +446,36 @@
                     <!-- PANE 5: Typography Controls -->
                     <div class="pane-card section-card" id="pane-typography" data-pane-id="pane-typography">
                         <div class="pane-header">
-                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder" draggable="false">
-                                <i class="hd-icon hd-icon-three-dots-horizontal"></i>
+                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder">
+                                <svg class="pane-drag-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <circle class="theme-icon-shape" cx="5" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="12" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="19" cy="12" r="2.2" fill="#FFFFFF"/>
+                                </svg>
+                            </div>
+                            <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել (Collapse/Expand)" aria-label="Collapse">
+                                <svg class="pane-chevron" viewBox="0 0 24 24" width="14" height="14">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 16.59 8.59 L 12 13.17 L 7.41 8.59 L 6 10 L 12 16 L 18 10 Z"/>
+                                </svg>
                             </div>
                             <div class="pane-title-wrap">
                                 <span class="pane-title" data-i18n="sec3Title">Տառատեսակներ եւ Տառաչափ (Typography)</span>
                             </div>
                             <div class="pane-header-actions">
-                                <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել" aria-label="Collapse">
-                                    <i class="hd-icon hd-icon-Chevrolt-Arrow-Bottom pane-chevron"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-up-btn" title="Տեղափոխել վերև / Move Up" aria-label="Move Up">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 4 L 5 11 L 6.41 12.41 L 11 7.83 L 11 20 L 13 20 L 13 7.83 L 17.59 12.41 L 19 11 Z"/>
+                                    </svg>
                                 </div>
-                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել" aria-label="Close">
-                                    <i class="hd-icon hd-icon-Close"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-down-btn" title="Տեղափոխել ներքև / Move Down" aria-label="Move Down">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 20 L 19 13 L 17.59 11.59 L 13 16.17 L 13 4 L 11 4 L 11 16.17 L 6.41 11.59 L 5 13 Z"/>
+                                    </svg>
+                                </div>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել (Close)" aria-label="Close">
+                                    <svg class="pane-close-icon" viewBox="0 0 24 24" width="14" height="14">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 19 6.41 L 17.59 5 L 12 10.59 L 6.41 5 L 5 6.41 L 10.59 12 L 5 17.59 L 6.41 19 L 12 13.41 L 17.59 19 L 19 17.59 L 13.41 12 Z"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -464,18 +570,36 @@
                     <!-- PANE 6: Colors & Cell Appearance -->
                     <div class="pane-card section-card" id="pane-colors" data-pane-id="pane-colors">
                         <div class="pane-header">
-                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder" draggable="false">
-                                <i class="hd-icon hd-icon-three-dots-horizontal"></i>
+                            <div class="pane-drag-handle" title="Տեղափոխել / Drag to reorder">
+                                <svg class="pane-drag-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <circle class="theme-icon-shape" cx="5" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="12" cy="12" r="2.2" fill="#FFFFFF"/>
+                                    <circle class="theme-icon-shape" cx="19" cy="12" r="2.2" fill="#FFFFFF"/>
+                                </svg>
+                            </div>
+                            <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել (Collapse/Expand)" aria-label="Collapse">
+                                <svg class="pane-chevron" viewBox="0 0 24 24" width="14" height="14">
+                                    <path class="theme-icon-shape" fill="#FFFFFF" d="M 16.59 8.59 L 12 13.17 L 7.41 8.59 L 6 10 L 12 16 L 18 10 Z"/>
+                                </svg>
                             </div>
                             <div class="pane-title-wrap">
                                 <span class="pane-title" data-i18n="sec4Title">Գույներ եւ Վանդակների Տեսք (Colors)</span>
                             </div>
                             <div class="pane-header-actions">
-                                <div role="button" tabindex="0" class="pane-action-btn pane-collapse-btn" title="Ծալել / Բացել" aria-label="Collapse">
-                                    <i class="hd-icon hd-icon-Chevrolt-Arrow-Bottom pane-chevron"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-up-btn" title="Տեղափոխել վերև / Move Up" aria-label="Move Up">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 4 L 5 11 L 6.41 12.41 L 11 7.83 L 11 20 L 13 20 L 13 7.83 L 17.59 12.41 L 19 11 Z"/>
+                                    </svg>
                                 </div>
-                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել" aria-label="Close">
-                                    <i class="hd-icon hd-icon-Close"></i>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-move-down-btn" title="Տեղափոխել ներքև / Move Down" aria-label="Move Down">
+                                    <svg viewBox="0 0 24 24" width="13" height="13">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 12 20 L 19 13 L 17.59 11.59 L 13 16.17 L 13 4 L 11 4 L 11 16.17 L 6.41 11.59 L 5 13 Z"/>
+                                    </svg>
+                                </div>
+                                <div role="button" tabindex="0" class="pane-action-btn pane-close-btn" title="Փակել (Close)" aria-label="Close">
+                                    <svg class="pane-close-icon" viewBox="0 0 24 24" width="14" height="14">
+                                        <path class="theme-icon-shape" fill="#FFFFFF" d="M 19 6.41 L 17.59 5 L 12 10.59 L 6.41 5 L 5 6.41 L 10.59 12 L 5 17.59 L 6.41 19 L 12 13.41 L 17.59 19 L 19 17.59 L 13.41 12 Z"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
@@ -589,29 +713,46 @@
 
         <!-- FIXED BOTTOM ACTION BAR -->
         <div class="fixed-bottom-bar" id="fixedBottomBar">
-            <div class="action-grid">
+            <div class="action-btn-row">
+                <!-- Live Preview Checkbox (նշատուփ) -->
+                <label class="live-preview-checkbox" id="livePreviewWrap" title="Միացնել / Անջատել ուղիղ նախադիտումը InDesign-ում">
+                    <input type="checkbox" id="inDesignLivePreview" checked>
+                    <span class="live-checkbox-box">
+                        <svg class="live-check-svg" viewBox="0 0 24 24" width="11" height="11">
+                            <path fill="#FFFFFF" d="M 9 16.17 L 4.83 12 L 3.41 13.41 L 9 19 L 21 7 L 19.59 5.59 Z"/>
+                        </svg>
+                    </span>
+                    <span class="live-checkbox-label" id="liveBtnText" data-i18n="livePreviewShort">Ուղիղ</span>
+                </label>
+
                 <!-- Start / Refresh Button -->
-                <hd-button id="startPreviewBtn" class="btn-action btn-start" data-color="#1B365D" data-height="32px" title="Սկսել կամ թարմացնել">
-                    <span id="startBtnIcon" class="btn-icon"><i class="hd-icon hd-icon-play"></i></span>
+                <hd-button id="startPreviewBtn" class="btn-action btn-start" data-color="#0284c7" data-height="30px" title="Սկսել կամ թարմացնել">
+                    <span id="startBtnIcon" class="btn-icon">
+                        <svg class="btn-svg-icon" viewBox="0 0 24 24" width="13" height="13">
+                            <path fill="#FFFFFF" d="M 8 5 L 8 19 L 19 12 Z"/>
+                        </svg>
+                    </span>
                     <span id="startBtnText">Սկսել</span>
                 </hd-button>
 
-                <!-- Live Preview Toggle Button -->
-                <hd-button id="toggleLivePreviewBtn" class="btn-action btn-live active" data-color="#2E5685" data-height="32px" title="Միացնել/Անջատել ուղիղ նախադիտումը">
-                    <span class="live-dot">●</span>
-                    <span id="liveBtnText">Ուղիղ Նախադիտում</span>
-                </hd-button>
-                <input type="checkbox" id="inDesignLivePreview" checked style="display: none;">
-
-                <!-- Create Button (dynamic based on scope) -->
-                <hd-button id="generateCalendarBtn" class="btn-action btn-generate" data-color="#16a34a" data-height="32px" title="Ստեղծել օրացույցը InDesign-ում">
-                    <span class="btn-icon"><i class="hd-icon hd-icon-Star"></i></span>
+                <!-- Create Button -->
+                <hd-button id="generateCalendarBtn" class="btn-action btn-generate" data-color="#16a34a" data-height="30px" title="Ստեղծել օրացույցը InDesign-ում">
+                    <span class="btn-icon">
+                        <svg class="btn-svg-icon" viewBox="0 0 24 24" width="13" height="13">
+                            <path fill="#FFFFFF" d="M 12 2 L 15.09 8.26 L 22 9.27 L 17 14.14 L 18.18 21.02 L 12 17.77 L 5.82 21.02 L 7 14.14 L 2 9.27 L 8.91 8.26 Z"/>
+                        </svg>
+                    </span>
                     <span id="generateBtnText">Ստեղծել (12 էջ)</span>
                 </hd-button>
 
-                <!-- Clean Page Button (Icon only) -->
-                <hd-button id="resetDocBtn" class="btn-action btn-reset" data-color="#334155" data-height="32px" title="Ջնջել ամեն ինչ եւ վերադառնալ մաքուր թղթի">
-                    <span class="btn-icon btn-reset-icon"><i class="hd-icon hd-icon-trash"></i></span>
+                <!-- Clean Paper Button -->
+                <hd-button id="resetDocBtn" class="btn-action btn-reset" data-color="#334155" data-height="30px" title="Ջնջել ամեն ինչ եւ վերադառնալ մաքուր թղթի">
+                    <span class="btn-icon">
+                        <svg class="btn-svg-icon" viewBox="0 0 24 24" width="13" height="13">
+                            <path fill="#FFFFFF" d="M 6 19 C 6 20.1 6.9 21 8 21 L 16 21 C 17.1 21 18 20.1 18 19 L 18 7 L 6 7 L 6 19 Z M 8 9 L 16 9 L 16 19 L 8 19 L 8 9 Z M 15.5 4 L 14.5 3 L 9.5 3 L 8.5 4 L 5 4 L 5 6 L 19 6 L 19 4 L 15.5 4 Z"/>
+                        </svg>
+                    </span>
+                    <!-- <span id="resetBtnText" data-i18n="resetDocBtn">Մաքուր թուղթ</span> -->
                 </hd-button>
             </div>
 
